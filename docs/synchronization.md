@@ -171,7 +171,7 @@ commands do today.
   guessed). It never touches files. Afterwards the import wizard offers the
   forgotten notes as new again.
 
-### Known limitations (tracked as UC-28 and UC-33 in TODO.md)
+### Known limitations (tracked as UC-28 and UC-33 on the board in `proj/`)
 
 - A note added in Anki to a deck that was imported earlier is skipped silently:
   it has neither a ledger record nor a block, so it is not counted and not

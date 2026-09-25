@@ -7,6 +7,7 @@
     "dev": "rollup --config rollup.config.js -w",
     "build": "esbuild main.ts --bundle --external:obsidian --format=cjs --platform=browser --target=es2018 --outfile=main.js --sourcemap=inline",
     "release": "npm run build && mkdir -p dist/better-flashcards && cp main.js manifest.json styles.css dist/better-flashcards/",
+    "board": "bunx kanban-cli proj/board.md",
     "test": "jest",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
