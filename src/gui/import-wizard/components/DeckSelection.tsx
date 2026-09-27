@@ -2,10 +2,10 @@ import { useEffect, useState, type JSX } from "react";
 import { mergeClasses } from "src/gui/classes";
 import { startAsyncLoad } from "src/gui/import-wizard/start-async-load";
 import type { Anki } from "src/services/anki";
-import { deckSearchQuery } from "src/services/deck-query";
 import type { VaultNoteIndex } from "src/services/vault";
 import type { NoteSyncState } from "src/services/import";
-import { fetchDeckNotes, isNoteUpdatedSince } from "src/services/import";
+import { isNoteUpdatedSince } from "src/services/import";
+import { deckSearchQuery, fetchDeckNotes } from "src/services/anki/read";
 import {
   commonWizardClasses,
   deckSelectionClasses,

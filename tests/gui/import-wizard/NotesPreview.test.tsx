@@ -13,7 +13,7 @@ import { Anki } from "src/services/anki";
 import { NotesPreview } from "src/gui/import-wizard/components/NotesPreview";
 import type { Vault as ObsidianVault } from "obsidian";
 import { App } from "obsidian-test-mocks/obsidian";
-import { computeContentHash } from "src/services/yaml-note";
+import { computeContentHash } from "src/services/notes/content-hash";
 import { syncedCleanRecord } from "src/services/note-lifecycle";
 import type { NoteLifecycleRecord } from "src/services/note-lifecycle";
 import { AnkiConnectMock } from "../../mocks/anki-connect";

@@ -24,8 +24,12 @@ import {
   noteFileAt,
   type VaultNoteIndex,
 } from "src/services/vault";
-import { executeImport, fetchDeckNotes } from "src/services/import";
-import { ankiContentHash, blockContentHash } from "src/services/note-hash";
+import { executeImport } from "src/services/import";
+import { fetchDeckNotes } from "src/services/anki/read";
+import {
+  ankiContentHash,
+  blockContentHash,
+} from "src/services/notes/content-hash";
 import { packForModel } from "src/services/note-packs";
 import {
   createNoteFencePattern,

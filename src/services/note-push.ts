@@ -5,16 +5,16 @@ import type { ISettings } from "src/conf/settings";
 import type { AnkiNote, AnkiNoteInfo } from "src/entities/anki-note";
 import { CustomMappedNote } from "src/entities/custom-mapped-note";
 import type { Anki } from "src/services/anki";
+import { escapeRegExp } from "src/utils";
+import { fetchNotesByIdMap } from "src/services/anki/read";
 import type { FieldTarget } from "src/entities/field-mapping";
 import { encodeBase64 } from "src/services/media";
-import { blockContentHash } from "src/services/note-hash";
+import { blockContentHash } from "src/services/notes/content-hash";
 import { syncedCleanRecord } from "src/services/note-lifecycle";
 import type { NotePack } from "src/services/note-packs";
 import type { YamlNote } from "src/services/yaml-note";
 
 const audioExtensions = ["flac", "m4a", "mp3", "ogg", "opus", "wav"];
-
-const notesInfoChunkSize = 50;
 
 export interface PushTarget {
   block: YamlNote;
@@ -65,10 +65,6 @@ function isAudio(filename: string): boolean {
   const dot = filename.lastIndexOf(".");
   const extension = dot < 0 ? "" : filename.slice(dot + 1).toLowerCase();
   return audioExtensions.includes(extension);
-}
-
-function escapePattern(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function parentFolderOf(filePath: string): string {
@@ -129,7 +125,7 @@ async function applyVaultMedia(
       .split(`![[${reference}]]`)
       .join(tag)
       .replace(
-        new RegExp(`!\\[\\[${escapePattern(reference)}\\|[^\\]]*\\]\\]`, "g"),
+        new RegExp(`!\\[\\[${escapeRegExp(reference)}\\|[^\\]]*\\]\\]`, "g"),
         tag,
       );
   }
@@ -252,7 +248,7 @@ export async function recordSyncedBaselines(
   if (baselines.length === 0) {
     return;
   }
-  const fresh = await fetchNotesById(
+  const fresh = await fetchNotesByIdMap(
     anki,
     baselines.map((baseline) => baseline.noteId),
   );
@@ -263,22 +259,6 @@ export async function recordSyncedBaselines(
       Date.now(),
     );
   }
-}
-
-async function fetchNotesById(
-  anki: Anki,
-  noteIds: number[],
-): Promise<Map<number, AnkiNoteInfo>> {
-  const byId = new Map<number, AnkiNoteInfo>();
-  for (let index = 0; index < noteIds.length; index += notesInfoChunkSize) {
-    const chunk = await anki.getNotes(
-      noteIds.slice(index, index + notesInfoChunkSize),
-    );
-    for (const note of chunk) {
-      byId.set(note.noteId, note);
-    }
-  }
-  return byId;
 }
 
 export function mediaFileCount(notes: AnkiNote[]): number {

@@ -7,13 +7,13 @@ import "obsidian-test-mocks/jest-setup";
 import { App, TFile } from "obsidian-test-mocks/obsidian";
 import type { Vault as ObsidianVault } from "obsidian";
 import {
-  computeContentHash,
   parseYamlNotes,
   readYamlNotes,
   serializeYamlNote,
   yamlNoteFileName,
 } from "src/services/yaml-note";
 import type { YamlNote } from "src/services/yaml-note";
+import { computeContentHash } from "src/services/notes/content-hash";
 import { jsonEngine } from "../helpers/json-engine";
 
 function yamlCard(overrides: Partial<YamlNote> = {}): YamlNote {

@@ -9,11 +9,8 @@ import type {
 } from "src/services/note-lifecycle";
 import type { FieldMapping as FieldMap } from "src/entities/field-mapping";
 import type { VaultNoteIndex } from "src/services/vault";
-import {
-  executeImport,
-  fetchNotesByIds,
-  type ImportExecutionReport,
-} from "src/services/import";
+import { executeImport, type ImportExecutionReport } from "src/services/import";
+import { fetchNotesByIds } from "src/services/anki/read";
 import { commonWizardClasses } from "src/gui/import-wizard/classes";
 
 export interface ImportExecutionProps {

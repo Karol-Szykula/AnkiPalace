@@ -17,8 +17,9 @@ import type {
 import { decisionActFor, syncDecisionFor } from "src/services/sync-decision";
 import type { SyncDecisionRow } from "src/services/sync-decision";
 import type { NoteLifecycleRecord } from "src/services/note-lifecycle";
-import { computeContentHash } from "src/services/yaml-note";
-import { fetchDeckNotes, normalizeNoteText } from "src/services/import";
+import { computeContentHash } from "src/services/notes/content-hash";
+import { fetchDeckNotes } from "src/services/anki/read";
+import { normalizeNoteText } from "src/services/notes/text";
 import type { ClassifiedNote } from "src/services/import";
 import type { NotePreviewStatus } from "src/services/note-lifecycle";
 import {

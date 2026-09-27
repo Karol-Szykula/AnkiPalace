@@ -1,22 +1,21 @@
-import * as showdown from "showdown";
 import { TFile } from "obsidian";
 import type { Vault } from "obsidian";
 import type { Anki } from "src/services/anki";
-import { deckSearchQuery } from "src/services/deck-query";
+import { deckSearchQuery, withDeckNames } from "src/services/anki/read";
+import {
+  deckFolder,
+  parentFolderOf,
+  uniquePath,
+} from "src/services/vault/paths";
 import type { AnkiNoteInfo } from "src/entities/anki-note";
-import type { FieldMapping, FieldTarget } from "src/entities/field-mapping";
-import { ankiFieldNames } from "src/conf/constants";
+import type { FieldMapping } from "src/entities/field-mapping";
 import type { VaultNoteIndex } from "src/services/vault";
 import {
   ensureFolderExists,
   extractYamlNoteIds,
   findVaultNoteBlock,
 } from "src/services/vault";
-import {
-  importDeckMedia,
-  mediaFilenamesIn,
-  rewriteMediaReferences,
-} from "src/services/media";
+import { importDeckMedia, rewriteMediaReferences } from "src/services/media";
 import type { MediaPathMap } from "src/services/media";
 import { packForModel, type NotePack } from "src/services/note-packs";
 import {
@@ -31,11 +30,13 @@ import {
   type NoteLifecycleStatus,
   type NotePreviewStatus,
 } from "src/services/note-lifecycle";
+import { serializeYamlNote, yamlNoteFileName } from "src/services/yaml-note";
+import { computeContentHash } from "src/services/notes/content-hash";
 import {
-  computeContentHash,
-  serializeYamlNote,
-  yamlNoteFileName,
-} from "src/services/yaml-note";
+  buildYamlNoteFields,
+  type YamlNoteFields,
+} from "src/services/notes/fields";
+import { noteMediaFilenames } from "src/services/notes/text";
 import { obsidianYamlEngine, type YamlEngine } from "src/services/yaml-engine";
 import {
   basicModelName,
@@ -60,28 +61,6 @@ const knownModelBases = [
 ];
 
 const discoverySampleSize = 100;
-const notesChunkSize = 100;
-
-function stripHtml(input: string): string {
-  return input
-    .replace(/<\/?(p|div|li|ul|ol|br|h[1-6]|tr|table|blockquote)[^>]*>/gi, " ")
-    .replace(/<[^>\n]{0,500}>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&gt;/g, ">")
-    .replace(/&lt;/g, "<")
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, '"');
-}
-
-function stripMarkdown(input: string): string {
-  return input
-    .replace(/\*\*(.*?)\*\*/g, "$1")
-    .replace(/__(.*?)__/g, "$1")
-    .replace(/^[ \t]*(?:[-*]|>[ \t]*|\d+\.)[ \t]+/gm, "")
-    .replace(/([*_`#])/g, "")
-    .replace(/!\[([^\]\n]{0,500})\]\(([^)\n]{0,2000})\)/g, "$1")
-    .replace(/\[([^\]\n]{0,500})\]\(([^)\n]{0,2000})\)/g, "$1");
-}
 
 export interface ClassifiedNote {
   isInVaultIndex: boolean;
@@ -105,121 +84,6 @@ export function isNoteUpdatedSince(
   sync: NoteSyncState,
 ): boolean {
   return (note.mod ?? 0) > noteSyncRev(sync, note.noteId);
-}
-
-export function normalizeNoteText(input: string): string {
-  return stripMarkdown(stripHtml(input)).replace(/\s+/g, " ").trim();
-}
-
-async function fetchNotesInChunks(
-  anki: Anki,
-  noteIds: number[],
-  onChunk?: (fetched: number, total: number) => void,
-): Promise<AnkiNoteInfo[]> {
-  const notes: AnkiNoteInfo[] = [];
-  for (let i = 0; i < noteIds.length; i += notesChunkSize) {
-    const chunk = await anki.getNotes(noteIds.slice(i, i + notesChunkSize));
-    notes.push(...chunk);
-    onChunk?.(notes.length, noteIds.length);
-  }
-  return notes;
-}
-
-async function withDeckNames(
-  anki: Anki,
-  working: WorkingNotes,
-): Promise<WorkingNotes> {
-  const deckByCardId = await cardDeckNames(anki, working.notes);
-  return {
-    ...working,
-    notes: working.notes.map((note) => {
-      const deckName = noteDeckName(note, deckByCardId);
-      return deckName === null ? note : { ...note, deckName };
-    }),
-  };
-}
-
-function noteDeckName(
-  note: AnkiNoteInfo,
-  deckByCardId: Map<number, string>,
-): string | null {
-  const deckNames = (note.cards ?? [])
-    .map((cardId) => deckByCardId.get(cardId))
-    .filter(
-      (deckName): deckName is string =>
-        deckName !== undefined && deckName !== "",
-    );
-  if (deckNames.length === 0) {
-    return null;
-  }
-  const sorted = [...deckNames].sort((first: string, second: string) =>
-    first.localeCompare(second),
-  );
-  return sorted[0] ?? null;
-}
-
-async function cardDeckNames(
-  anki: Anki,
-  notes: AnkiNoteInfo[],
-): Promise<Map<number, string>> {
-  const cardIds = notes.flatMap((note) => note.cards ?? []);
-  const deckByCardId = new Map<number, string>();
-  for (let i = 0; i < cardIds.length; i += notesChunkSize) {
-    const cards = await anki.cardsInfo(cardIds.slice(i, i + notesChunkSize));
-    for (const card of cards) {
-      deckByCardId.set(card.cardId, card.deckName);
-    }
-  }
-  return deckByCardId;
-}
-
-export async function fetchDeckNotes(
-  anki: Anki,
-  deckName: string,
-  onChunk?: (fetched: number, total: number) => void,
-): Promise<AnkiNoteInfo[]> {
-  const noteIds = await anki.findNotes(deckSearchQuery(deckName));
-  return await fetchNotesInChunks(anki, noteIds, onChunk);
-}
-
-export async function fetchNotesByIds(
-  anki: Anki,
-  noteIds: number[],
-): Promise<AnkiNoteInfo[]> {
-  return await fetchNotesInChunks(anki, noteIds);
-}
-
-const markdownConverter = new showdown.Converter();
-
-function listMarkerFor(indent: string): string {
-  return indent.length <= 1 ? "- " : `${indent}- `;
-}
-
-function cleanConvertedMarkdown(markdown: string): string {
-  return markdown
-    .replace(/<!--[\s\S]*?-->/g, "")
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/?(div|p)[^>]*>/gi, "\n")
-    .replace(/<\/?span[^>]*>/gi, "")
-    .replace(/^( *)\\- /gm, listMarkerFor)
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-}
-
-function mappedFieldValue(
-  note: AnkiNoteInfo,
-  mapping: FieldMapping,
-  target: FieldTarget,
-): string {
-  const field = Object.keys(mapping).find((name) => mapping[name] === target);
-  const html = field ? (note.fields[field]?.value ?? "") : "";
-  return cleanConvertedMarkdown(markdownConverter.makeMarkdown(html));
-}
-
-function noteMediaFilenames(note: AnkiNoteInfo): string[] {
-  return mediaFilenamesIn(
-    Object.values(note.fields).map((field) => field.value),
-  );
 }
 
 export function isKnownModel(modelName: string): boolean {
@@ -270,18 +134,9 @@ export async function discoverDeckModels(
   return groupNotesByModel(notes);
 }
 
-export function deckFolder(deckName: string, targetFolder: string): string {
-  const deckPath = deckName.split("::").join("/");
-  return targetFolder ? `${targetFolder}/${deckPath}` : deckPath;
-}
-
 function markdownFileName(title: string): { stem: string; extension: string } {
   const stem = title.endsWith(".md") ? title.slice(0, -".md".length) : title;
   return { stem: stem || "note", extension: ".md" };
-}
-
-function joinFolder(folder: string, baseName: string): string {
-  return folder ? `${folder}/${baseName}` : baseName;
 }
 
 function yamlNoteIdInContent(content: string, noteId: number): boolean {
@@ -310,34 +165,16 @@ async function resolveExistingNotePath(
   return indexedPath;
 }
 
-function parentFolderOf(path: string): string {
-  const slash = path.lastIndexOf("/");
-  return slash < 0 ? "" : path.slice(0, slash);
-}
-
 async function resolveRenameTargetPath(
   vault: Vault,
   desiredPath: string,
   takenPaths: Set<string>,
   selfPath: string,
 ): Promise<string> {
-  const dotIndex = desiredPath.lastIndexOf(".");
-  const stem = desiredPath.slice(0, dotIndex);
-  const extension = desiredPath.slice(dotIndex);
-  let candidate = desiredPath;
-  let suffix = 0;
-  for (;;) {
-    if (!takenPaths.has(candidate)) {
-      const existing = await vault.getAbstractFileByPath(candidate);
-      if (!existing || existing.path === selfPath) {
-        break;
-      }
-    }
-    suffix += 1;
-    candidate = `${stem}-${suffix}${extension}`;
-  }
-  takenPaths.add(candidate);
-  return candidate;
+  return uniquePath("", desiredPath, takenPaths, (candidate) => {
+    const existing = vault.getAbstractFileByPath(candidate);
+    return existing !== null && existing.path !== selfPath;
+  });
 }
 
 async function renameIndexedNoteFile(
@@ -374,27 +211,17 @@ async function resolveNoteFilePath(
   noteId: number,
   takenPaths: Set<string>,
 ): Promise<string> {
-  const { stem, extension } = markdownFileName(title);
-  let candidate = joinFolder(folder, `${stem}${extension}`);
-  let suffix = 0;
-  for (;;) {
-    if (!takenPaths.has(candidate)) {
-      const existing = await vault.getAbstractFileByPath(candidate);
-      if (!existing) {
-        break;
-      }
-      if (existing instanceof TFile) {
-        const content = await vault.read(existing);
-        if (yamlNoteIdInContent(content, noteId)) {
-          break;
-        }
-      }
+  const { stem } = markdownFileName(title);
+  return uniquePath(folder, `${stem}.md`, takenPaths, async (candidate) => {
+    const existing = vault.getAbstractFileByPath(candidate);
+    if (existing === null) {
+      return false;
     }
-    suffix += 1;
-    candidate = joinFolder(folder, `${stem}-${suffix}${extension}`);
-  }
-  takenPaths.add(candidate);
-  return candidate;
+    if (!(existing instanceof TFile)) {
+      return true;
+    }
+    return !yamlNoteIdInContent(await vault.read(existing), noteId);
+  });
 }
 
 export interface ExecuteImportRequest {
@@ -428,33 +255,6 @@ export interface ImportExecutionReport {
   syncedHashes: Record<number, string>;
   syncedNotes: Record<number, number>;
   vanishedFromDeck: number;
-}
-
-interface YamlNoteFields {
-  back: string;
-  front: string;
-  tags: string;
-}
-
-export function buildYamlNoteFields(
-  note: AnkiNoteInfo,
-  mapping: FieldMapping,
-): YamlNoteFields | null {
-  const front = mappedFieldValue(note, mapping, ankiFieldNames.front);
-  const back = mappedFieldValue(note, mapping, ankiFieldNames.back);
-  const text = mappedFieldValue(note, mapping, ankiFieldNames.text);
-  const extra = mappedFieldValue(note, mapping, ankiFieldNames.extra);
-  const tags = note.tags.join(" ");
-  if (front && back) {
-    return { back, front, tags };
-  }
-  if (text) {
-    return { back: extra, front: text, tags };
-  }
-  if (front) {
-    return { back: "", front, tags };
-  }
-  return null;
 }
 
 function rebuildYamlNoteFields(
@@ -818,7 +618,11 @@ export async function executeImport(
   const selected = request.notes.filter(
     (note) => request.decisions[note.noteId] ?? false,
   );
-  const working = await withDeckNames(anki, workingNotesFor(request, selected));
+  const selectedForRun = workingNotesFor(request, selected);
+  const working = {
+    ...selectedForRun,
+    notes: await withDeckNames(anki, selectedForRun.notes),
+  };
   const { packable, skippedUnmapped } = await packableNotes(
     working.notes,
     packResolver(vault),

@@ -2,6 +2,7 @@ import type { Vault } from "obsidian";
 import type { Anki } from "src/services/anki";
 import { escapeRegExp } from "src/utils";
 import { ensureFolderExists } from "src/services/vault";
+import { uniquePath } from "src/services/vault/paths";
 
 export type MediaPathMap = Record<string, string>;
 
@@ -49,19 +50,13 @@ export function resolveMediaPath(
   deckName: string,
   filename: string,
   takenPaths: Set<string>,
-): string {
-  const folder = deckAttachmentsFolder(deckName);
-  const dotIndex = filename.lastIndexOf(".");
-  const stem = dotIndex > 0 ? filename.slice(0, dotIndex) : filename;
-  const extension = dotIndex > 0 ? filename.slice(dotIndex) : "";
-  let candidate = `${folder}/${filename}`;
-  let suffix = 0;
-  while (takenPaths.has(candidate)) {
-    suffix += 1;
-    candidate = `${folder}/${stem}-${suffix}${extension}`;
-  }
-  takenPaths.add(candidate);
-  return candidate;
+): Promise<string> {
+  return uniquePath(
+    deckAttachmentsFolder(deckName),
+    filename,
+    takenPaths,
+    () => false,
+  );
 }
 
 export function decodeBase64(base64: string): ArrayBuffer {
@@ -105,10 +100,12 @@ export async function importDeckMedia(
       await ensureFolderExists(vault, deckAttachmentsFolder(deckName));
       folderReady = true;
     }
-    let targetPath = resolveMediaPath(deckName, filename, takenPaths);
-    while (await vault.getAbstractFileByPath(targetPath)) {
-      targetPath = resolveMediaPath(deckName, filename, takenPaths);
-    }
+    const targetPath = await uniquePath(
+      deckAttachmentsFolder(deckName),
+      filename,
+      takenPaths,
+      (candidate) => vault.getAbstractFileByPath(candidate) !== null,
+    );
     await vault.createBinary(targetPath, decodeBase64(data));
     written[filename] = targetPath;
   }

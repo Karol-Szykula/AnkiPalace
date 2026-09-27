@@ -69,7 +69,11 @@ describe("resolveMediaPath", () => {
     const takenPaths = new Set<string>();
 
     // when
-    const targetPath = resolveMediaPath("Medicine", "image.png", takenPaths);
+    const targetPath = await resolveMediaPath(
+      "Medicine",
+      "image.png",
+      takenPaths,
+    );
 
     // then
     expect(targetPath).toBe("Medicine/attachments/image.png");
@@ -80,9 +84,21 @@ describe("resolveMediaPath", () => {
     const takenPaths = new Set<string>();
 
     // when
-    const firstPath = resolveMediaPath("Medicine", "image.png", takenPaths);
-    const secondPath = resolveMediaPath("Medicine", "image.png", takenPaths);
-    const thirdPath = resolveMediaPath("Medicine", "image.png", takenPaths);
+    const firstPath = await resolveMediaPath(
+      "Medicine",
+      "image.png",
+      takenPaths,
+    );
+    const secondPath = await resolveMediaPath(
+      "Medicine",
+      "image.png",
+      takenPaths,
+    );
+    const thirdPath = await resolveMediaPath(
+      "Medicine",
+      "image.png",
+      takenPaths,
+    );
 
     // then
     expect(firstPath).toBe("Medicine/attachments/image.png");
@@ -95,8 +111,8 @@ describe("resolveMediaPath", () => {
     const takenPaths = new Set<string>();
 
     // when
-    const firstPath = resolveMediaPath("Medicine", "README", takenPaths);
-    const secondPath = resolveMediaPath("Medicine", "README", takenPaths);
+    const firstPath = await resolveMediaPath("Medicine", "README", takenPaths);
+    const secondPath = await resolveMediaPath("Medicine", "README", takenPaths);
 
     // then
     expect(firstPath).toBe("Medicine/attachments/README");

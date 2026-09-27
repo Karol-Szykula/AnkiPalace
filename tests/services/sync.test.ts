@@ -8,7 +8,7 @@ import { App, TFile } from "obsidian-test-mocks/obsidian";
 import type { Vault as ObsidianVault } from "obsidian";
 import type { AnkiNoteInfo } from "src/entities/anki-note";
 import { Anki } from "src/services/anki";
-import { computeContentHash } from "src/services/yaml-note";
+import { computeContentHash } from "src/services/notes/content-hash";
 import {
   executeSync,
   fillMissingBlockIds,

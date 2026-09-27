@@ -13,7 +13,7 @@ import {
   formatExportReport,
   type ExportReport,
 } from "src/services/export";
-import { computeContentHash } from "src/services/yaml-note";
+import { computeContentHash } from "src/services/notes/content-hash";
 import { syncedCleanRecord } from "src/services/note-lifecycle";
 import type { ISettings } from "src/conf/settings";
 import { ankiResponder } from "../helpers/anki-responder";

@@ -4,7 +4,11 @@ import type { AnkiNote, AnkiNoteInfo } from "src/entities/anki-note";
 import type { ISettings } from "src/conf/settings";
 import type { Anki } from "src/services/anki";
 import { assureModels } from "src/services/anki-models";
-import { ankiContentHash, blockContentHash } from "src/services/note-hash";
+import { fetchNotesByIdMap } from "src/services/anki/read";
+import {
+  ankiContentHash,
+  blockContentHash,
+} from "src/services/notes/content-hash";
 import {
   buildCreatedNote,
   buildPushedNote,
@@ -33,8 +37,6 @@ import {
   serializeYamlNote,
   type YamlNote,
 } from "src/services/yaml-note";
-
-const notesInfoChunkSize = 50;
 
 export interface ExportReport {
   created: number;
@@ -94,22 +96,6 @@ async function scanBlocks(
     }
   }
   return { locations, unreadable };
-}
-
-async function fetchNotesById(
-  anki: Anki,
-  noteIds: number[],
-): Promise<Map<number, AnkiNoteInfo>> {
-  const byId = new Map<number, AnkiNoteInfo>();
-  for (let index = 0; index < noteIds.length; index += notesInfoChunkSize) {
-    const chunk = await anki.getNotes(
-      noteIds.slice(index, index + notesInfoChunkSize),
-    );
-    for (const note of chunk) {
-      byId.set(note.noteId, note);
-    }
-  }
-  return byId;
 }
 
 async function ensureDecks(anki: Anki, deckNames: string[]): Promise<void> {
@@ -320,7 +306,7 @@ async function planExport(
     synced: [],
   };
   const context: BlockPlanContext = {
-    ankiNotes: await fetchNotesById(anki, indexedBlockIds(scan.locations)),
+    ankiNotes: await fetchNotesByIdMap(anki, indexedBlockIds(scan.locations)),
     packFor: packResolverFor(vault),
     settings,
     vault,

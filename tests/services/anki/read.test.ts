@@ -1,4 +1,4 @@
-import { deckSearchQuery } from "src/services/deck-query";
+import { deckSearchQuery } from "src/services/anki/read";
 
 describe("deckSearchQuery", () => {
   test("given a plain deck name when queried then it is quoted as one literal name", () => {
