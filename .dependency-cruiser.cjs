@@ -18,6 +18,14 @@ module.exports = {
       to: { path: "^src/gui/" },
     },
     {
+      name: "no-commands-from-domain",
+      severity: "error",
+      comment:
+        "A note's state, its document and the two boundaries never reach for a command; commands are the only things that may know about commands. Putting a shared helper in a command and importing it back from the domain is how a 26-line adapter ended up depending on an 865-line command",
+      from: { path: "^src/services/(anki|notes|vault)/" },
+      to: { path: "^src/services/commands/" },
+    },
+    {
       name: "no-react-from-services",
       severity: "error",
       comment:

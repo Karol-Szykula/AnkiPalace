@@ -35,6 +35,12 @@
 
 - No comments. Names must explain themselves (variables, functions,
   CSS tokens, test data).
+- A new service goes into the folder of its domain under `src/services/`
+  (`anki/`, `notes/`, `vault/`, `commands/`), never loose in `services/` and
+  never in `commands/` unless it is one of the three user commands. A helper
+  three modules share belongs to whichever folder owns the question it
+  answers. Mirrored in `tests/services/`. Layout and the direction imports may
+  take are in `proj/docs/model.md`.
 - Formatting: Prettier owns it (.prettierrc, 2 spaces, 80 columns, double
   quotes, trailing commas). Run `pnpm run format` and never hand-format; lint
   autofixes run after it, so `pnpm run format && pnpm run lint:fix` leaves a

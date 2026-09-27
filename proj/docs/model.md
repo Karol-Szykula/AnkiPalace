@@ -154,6 +154,39 @@ exists.
   direct report, never silent); masks need a canvas UI, which is a separate
   project.
 
+## Where the code sits
+
+Ports and adapters at the edges, the domain in the middle. `src/` is already
+split by role - `conf` for settings, `entities` for the shared contracts,
+`services` for behaviour, `gui` for the drawing, `dev` for developer-only
+commands - and inside `services/` the folders follow the direction imports are
+allowed to take:
+
+| Folder | What lives there | May import |
+| --- | --- | --- |
+| `services/commands/` | the three user commands and the push engine | anything |
+| `services/notes/` | the note itself: states, the decision table, the document, packs, text, fields, hashing | `services/anki`, `services/vault`, `entities` |
+| `services/anki/` | the AnkiConnect boundary | `entities`, `logger` |
+| `services/vault/` | the filesystem side | `entities`, `notes` |
+
+Two rules, and the second is enforced rather than merely written:
+
+- A new service goes into the folder of its domain, never loose in
+  `services/`. A helper that three modules need is not "shared": it belongs to
+  whichever of these folders owns the question it answers, and if that is not
+  obvious the question is not clear yet.
+- **A module in `anki/`, `notes/` or `vault/` may not import from
+  `commands/`.** Commands are the only things that may know about commands.
+  This is the `no-commands-from-domain` rule in `.dependency-cruiser.cjs`, and
+  it exists because the one violation it was written for was real: a 26-line
+  hash adapter imported an 865-line command to get a field-mapping function, so
+  the folder layout could not be enforced at all.
+
+Deliberately not encoded: a rule that no folder may import another. The graph
+does not allow it - `anki.ts` needs the default deck name from `vault`, and
+`vault.ts` reads note blocks - and a rule that has to be carved out teaches
+everyone to ignore the rule.
+
 ## Agreed entity shape (Anki mirror)
 
 - **ENT-01** — abstract `AnkiNote` base (noteId?, modelName, fields, tags,
