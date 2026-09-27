@@ -1,19 +1,19 @@
 import { useEffect, useMemo, useState, type JSX } from "react";
 import { startAsyncLoad } from "src/gui/import-wizard/start-async-load";
 import type { Vault } from "obsidian";
-import { Anki } from "src/services/anki";
+import { Anki } from "src/services/anki/anki";
 import { logger } from "src/services/logger";
 import type { ISettings } from "src/conf/settings";
-import type { VaultNoteIndex } from "src/services/vault";
-import { collectVaultNoteIndex } from "src/services/vault";
+import type { VaultNoteIndex } from "src/services/vault/vault";
+import { collectVaultNoteIndex } from "src/services/vault/vault";
 import type { FieldMapping as FieldMap } from "src/entities/field-mapping";
-import type { ImportExecutionReport } from "src/services/import";
-import { syncedCleanRecord } from "src/services/note-lifecycle";
+import type { ImportExecutionReport } from "src/services/commands/import-deck";
+import { syncedCleanRecord } from "src/services/notes/lifecycle";
 import {
   builtInPackFor,
   notePackVersion,
   savePack,
-} from "src/services/note-packs";
+} from "src/services/notes/packs";
 import { noteShapeFor } from "src/entities/note-shapes";
 import { mergeFieldMappings } from "src/entities/field-mapping";
 import { useDeckPreview } from "src/gui/import-wizard/use-deck-preview";

@@ -1,27 +1,30 @@
 import { useEffect, useState, type JSX } from "react";
 import { mergeClasses } from "src/gui/classes";
 import { startAsyncLoad } from "src/gui/import-wizard/start-async-load";
-import type { Anki } from "src/services/anki";
+import type { Anki } from "src/services/anki/anki";
 import type { AnkiNoteInfo } from "src/entities/anki-note";
 import type { Vault } from "obsidian";
-import type { VaultNoteIndex } from "src/services/vault";
-import { findVaultNoteBlock } from "src/services/vault";
+import type { VaultNoteIndex } from "src/services/vault/vault";
+import { findVaultNoteBlock } from "src/services/vault/vault";
 import {
   classifyNoteLifecycle,
   notePreviewStatusFor,
-} from "src/services/note-lifecycle";
+} from "src/services/notes/lifecycle";
 import type {
   NoteLifecycleEvent,
   NoteLifecycleStatus,
-} from "src/services/note-lifecycle";
-import { decisionActFor, syncDecisionFor } from "src/services/sync-decision";
-import type { SyncDecisionRow } from "src/services/sync-decision";
-import type { NoteLifecycleRecord } from "src/services/note-lifecycle";
+} from "src/services/notes/lifecycle";
+import {
+  decisionActFor,
+  syncDecisionFor,
+} from "src/services/notes/decision-table";
+import type { SyncDecisionRow } from "src/services/notes/decision-table";
+import type { NoteLifecycleRecord } from "src/services/notes/lifecycle";
 import { computeContentHash } from "src/services/notes/content-hash";
 import { fetchDeckNotes } from "src/services/anki/read";
 import { normalizeNoteText } from "src/services/notes/text";
-import type { ClassifiedNote } from "src/services/import";
-import type { NotePreviewStatus } from "src/services/note-lifecycle";
+import type { ClassifiedNote } from "src/services/commands/import-deck";
+import type { NotePreviewStatus } from "src/services/notes/lifecycle";
 import {
   notesPreviewClasses,
   commonWizardClasses,

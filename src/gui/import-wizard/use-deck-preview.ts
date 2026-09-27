@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import type { AnkiNoteInfo } from "src/entities/anki-note";
-import type { NoteLifecycleStatus } from "src/services/note-lifecycle";
+import type { NoteLifecycleStatus } from "src/services/notes/lifecycle";
 
 export interface DeckPreview {
   deckNotes: AnkiNoteInfo[];

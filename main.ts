@@ -3,7 +3,7 @@ import type { ISettings } from "src/conf/settings";
 import { normalizeSettings } from "src/conf/normalize-settings";
 import { SettingsTab } from "src/gui/settings-tab";
 import { ImportModal } from "src/gui/import-wizard/import-modal";
-import { Anki } from "src/services/anki";
+import { Anki } from "src/services/anki/anki";
 import { logger } from "src/services/logger";
 import { describeUnknown } from "src/utils";
 import {
@@ -14,13 +14,16 @@ import {
 } from "src/conf/constants";
 import { createNoteFormHandler } from "src/gui/note-form/processor";
 import { registerNoteFormAutoPreview } from "src/gui/note-form/auto-preview";
-import { executeSync, formatSyncReport } from "src/services/sync";
+import { executeSync, formatSyncReport } from "src/services/commands/sync";
 import { createNoteFormFile, noteFormBlock } from "src/gui/note-form/commands";
-import { executeExport, formatExportReport } from "src/services/export";
+import {
+  executeExport,
+  formatExportReport,
+} from "src/services/commands/export-deck";
 import {
   forgetRecordsWithoutFiles,
   formatPurgeLedgerReport,
-} from "src/services/ledger";
+} from "src/services/vault/records";
 
 const exportToAnkiCommandName = "Export to Anki";
 const syncCommandName = "Sync";

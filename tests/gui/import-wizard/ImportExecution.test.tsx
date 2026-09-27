@@ -8,14 +8,14 @@ import "obsidian-test-mocks/jest-setup";
 import { render, screen } from "@testing-library/react";
 import { App } from "obsidian-test-mocks/obsidian";
 import type { Vault as ObsidianVault } from "obsidian";
-import { Anki } from "src/services/anki";
+import { Anki } from "src/services/anki/anki";
 import { ImportExecution } from "src/gui/import-wizard/components/ImportExecution";
-import type { ImportExecutionReport } from "src/services/import";
-import { syncedCleanRecord } from "src/services/note-lifecycle";
+import type { ImportExecutionReport } from "src/services/commands/import-deck";
+import { syncedCleanRecord } from "src/services/notes/lifecycle";
 import type {
   NoteLifecycleRecord,
   NoteLifecycleStatus,
-} from "src/services/note-lifecycle";
+} from "src/services/notes/lifecycle";
 import { AnkiConnectMock } from "../../mocks/anki-connect";
 
 AnkiConnectMock.install();

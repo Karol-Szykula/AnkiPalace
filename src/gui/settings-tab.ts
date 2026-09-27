@@ -1,6 +1,6 @@
 import type { App } from "obsidian";
 import { Notice, PluginSettingTab, Setting } from "obsidian";
-import { Anki } from "src/services/anki";
+import { Anki } from "src/services/anki/anki";
 import { logger } from "src/services/logger";
 import type ObsidianFlashcard from "../../main";
 

@@ -1,4 +1,4 @@
-import type { Anki } from "src/services/anki";
+import type { Anki } from "src/services/anki/anki";
 import type { AnkiNoteInfo } from "src/entities/anki-note";
 
 /**

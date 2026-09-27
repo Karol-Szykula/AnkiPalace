@@ -6,10 +6,10 @@ import { BasicNoteForm } from "src/gui/note-form/BasicNoteForm";
 import { ClozeNoteForm } from "src/gui/note-form/ClozeNoteForm";
 import { bannerForStatus } from "src/gui/note-form/banners";
 import { noteFormClasses } from "src/gui/note-form/classes";
-import { parseNoteForm } from "src/services/note-parser";
+import { parseNoteForm } from "src/services/notes/document";
 import { saveNoteFormEdit } from "src/gui/note-form/persister";
 import { noteShapeFor, type NoteFormLayout } from "src/entities/note-shapes";
-import type { NoteLifecycleStatus } from "src/services/note-lifecycle";
+import type { NoteLifecycleStatus } from "src/services/notes/lifecycle";
 import type { NoteFormData, NoteFormEdit } from "src/entities/note-form-data";
 import { obsidianYamlEngine, type YamlEngine } from "src/services/yaml-engine";
 

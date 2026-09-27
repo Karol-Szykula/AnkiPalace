@@ -1,15 +1,18 @@
 import { useEffect, useRef, useState, type JSX } from "react";
 import { mergeClasses } from "src/gui/classes";
 import type { Vault } from "obsidian";
-import type { Anki } from "src/services/anki";
+import type { Anki } from "src/services/anki/anki";
 import type { AnkiNoteInfo } from "src/entities/anki-note";
 import type {
   NoteLifecycleRecord,
   NoteLifecycleStatus,
-} from "src/services/note-lifecycle";
+} from "src/services/notes/lifecycle";
 import type { FieldMapping as FieldMap } from "src/entities/field-mapping";
-import type { VaultNoteIndex } from "src/services/vault";
-import { executeImport, type ImportExecutionReport } from "src/services/import";
+import type { VaultNoteIndex } from "src/services/vault/vault";
+import {
+  executeImport,
+  type ImportExecutionReport,
+} from "src/services/commands/import-deck";
 import { fetchNotesByIds } from "src/services/anki/read";
 import { commonWizardClasses } from "src/gui/import-wizard/classes";
 

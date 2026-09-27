@@ -1,5 +1,5 @@
 import * as showdown from "showdown";
-import { mediaFilenamesIn } from "src/services/media";
+import { mediaFilenamesIn } from "src/services/vault/media";
 import type { AnkiNoteInfo } from "src/entities/anki-note";
 import type { FieldMapping, FieldTarget } from "src/entities/field-mapping";
 

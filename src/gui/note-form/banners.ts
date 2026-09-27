@@ -1,4 +1,4 @@
-import type { NoteLifecycleStatus } from "src/services/note-lifecycle";
+import type { NoteLifecycleStatus } from "src/services/notes/lifecycle";
 
 const bannerByStatus: Partial<Record<NoteLifecycleStatus, string>> = {
   "synced.diverged":

@@ -3,7 +3,7 @@ import type { App, Command } from "obsidian";
 import { noticeTimeout } from "src/conf/constants";
 import type { ISettings } from "src/conf/settings";
 import { ResetConfirmModal } from "src/gui/dev/reset-confirm-modal";
-import { formatResetReport, resetPluginData } from "src/services/dev-reset";
+import { formatResetReport, resetPluginData } from "src/dev/reset-data";
 import { describeUnknown } from "src/utils";
 
 interface DevCommandHost {

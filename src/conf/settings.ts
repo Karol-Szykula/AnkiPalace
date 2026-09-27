@@ -1,5 +1,5 @@
 import type { FieldMapping } from "src/entities/field-mapping";
-import type { NoteLifecycleRecord } from "src/services/note-lifecycle";
+import type { NoteLifecycleRecord } from "src/services/notes/lifecycle";
 
 export interface DeckImportSnapshot {
   deckName: string;

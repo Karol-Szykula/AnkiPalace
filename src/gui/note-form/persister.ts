@@ -1,6 +1,6 @@
 import { TFile } from "obsidian";
 import type { MarkdownPostProcessorContext, Vault } from "obsidian";
-import { serializeNoteForm } from "src/services/note-parser";
+import { serializeNoteForm } from "src/services/notes/document";
 import type { NoteFormData } from "src/entities/note-form-data";
 import { obsidianYamlEngine, type YamlEngine } from "src/services/yaml-engine";
 
