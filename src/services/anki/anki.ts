@@ -6,7 +6,6 @@ import type {
 import { ankiFieldNames } from "src/conf/constants";
 import { logger } from "src/services/logger";
 import { defaultDeckName } from "src/services/vault/vault";
-import { describeUnknown, toError } from "src/utils";
 
 export type AnkiActionRequest = {
   action: string;
@@ -359,4 +358,32 @@ export class Anki {
   public async requestPermission() {
     return this.invoke<{ permission: string }>("requestPermission", 6);
   }
+}
+
+export function describeUnknown(value: unknown): string {
+  if (value instanceof Error) {
+    return value.message;
+  }
+  if (typeof value === "string") {
+    return value;
+  }
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+  if (
+    value === undefined ||
+    typeof value === "function" ||
+    typeof value === "symbol"
+  ) {
+    return Object.prototype.toString.call(value);
+  }
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return Object.prototype.toString.call(value);
+  }
+}
+
+function toError(value: unknown): Error {
+  return value instanceof Error ? value : new Error(describeUnknown(value));
 }

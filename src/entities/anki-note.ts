@@ -1,4 +1,3 @@
-import { arraysEqual } from "src/utils";
 import { noteShapeFor, type NoteShape } from "src/entities/note-shapes";
 
 export type AnkiNotePayload = {
@@ -88,4 +87,18 @@ export function noteFieldsMatch(
   }
 
   return arraysEqual(remote.tags, local.tags);
+}
+
+function arraysEqual(a: string[], b: string[]): boolean {
+  if (a === b) return true;
+  if (a.length !== b.length) return false;
+
+  const sortedFirst = [...a].sort((first, second) =>
+    first.localeCompare(second),
+  );
+  const sortedSecond = [...b].sort((first, second) =>
+    first.localeCompare(second),
+  );
+
+  return sortedFirst.every((value, index) => value === sortedSecond[index]);
 }

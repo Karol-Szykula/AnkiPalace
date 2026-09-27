@@ -5,7 +5,7 @@ import { SettingsTab } from "src/gui/settings-tab";
 import { ImportModal } from "src/gui/import-wizard/import-modal";
 import { Anki } from "src/services/anki/anki";
 import { logger } from "src/services/logger";
-import { describeUnknown } from "src/utils";
+import { describeUnknown } from "src/services/anki/anki";
 import {
   clozeModelName,
   flashcardsIcon,

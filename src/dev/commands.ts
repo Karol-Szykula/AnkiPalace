@@ -4,7 +4,7 @@ import { noticeTimeout } from "src/conf/constants";
 import type { ISettings } from "src/conf/settings";
 import { ResetConfirmModal } from "src/gui/dev/reset-confirm-modal";
 import { formatResetReport, resetPluginData } from "src/dev/reset-data";
-import { describeUnknown } from "src/utils";
+import { describeUnknown } from "src/services/anki/anki";
 
 interface DevCommandHost {
   addCommand(command: Command): Command;
