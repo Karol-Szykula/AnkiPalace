@@ -1,4 +1,4 @@
-import { createMachine, type StateValue } from "xstate";
+import { createMachine, transition, type StateValue } from "xstate";
 import type { AnkiNoteInfo } from "src/entities/anki-note";
 
 export const NOTE_LIFECYCLE_STATUSES = [
@@ -84,15 +84,15 @@ export function transitionNoteLifecycle(
   status: NoteLifecycleStatus,
   event: NoteLifecycleEvent,
 ): NoteLifecycleStatus {
-  const moves = lifecycleTransitions[status];
   if (!knownEvents.has(event)) {
     throw new Error(`Unknown lifecycle event: ${event}`);
   }
-  const next = moves[event];
-  if (next === undefined) {
+  const snapshot = snapshotForStatus(status);
+  if (!snapshot.can({ type: event })) {
     throw new Error(`Event ${event} is not allowed in ${status}`);
   }
-  return next;
+  const [next] = transition(noteLifecycleMachine, snapshot, { type: event });
+  return statusOfSnapshot(next);
 }
 
 const machineId = "noteLifecycle";

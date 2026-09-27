@@ -161,10 +161,13 @@ exists.
   flag, not a class), `ClozeNote` (cN numbering), `CustomMappedNote` (generic
   class constructed from a pack, see ENT-04).
 - **ENT-02** — lifecycle = one xstate v5 machine, pure transitions only (no live
-  actors; hundreds of notes x interpreters is waste without gain). Machine is the
-  single source of truth for allowed operations per state; called as
-  `transition(status, event)` from import/export/sync. Mermaid diagram
-  generated from the machine definition.
+  actors; hundreds of notes x interpreters is waste without gain). The transition
+  table in `src/services/note-lifecycle.ts` is the source of truth and the
+  machine is generated from it, never edited directly; `transition(status, event)`
+  resolves through the machine, so import/export/sync cannot bypass it. The
+  conformance test in `tests/services/note-lifecycle.test.ts` is what proves the
+  generation is lossless — if the machine ever disagrees with the table, that test
+  is the failure. Mermaid diagram generated from the same table.
 - **ENT-03** — persisted record per noteId: `{ status, updatedAt, lastMod,
   lastHash, v }` (domain record, not an xstate snapshot: snapshots embed
   version-specific internals and break rehydration after machine/library

@@ -100,10 +100,55 @@ describe("transitionNoteLifecycle", () => {
     }
   });
 
-  test("given an unknown status when transitioned then throws", () => {
-    expect(() =>
-      transitionNoteLifecycle("nope" as NoteLifecycleStatus, "CHECK"),
-    ).toThrow();
+  test("given a self-loop move when transitioned then it resolves instead of being refused", () => {
+    // given
+    const status = "synced.clean";
+    const event = "CHECK";
+
+    // when
+    const next = transitionNoteLifecycle(status, event);
+
+    // then
+    expect(next).toBe(status);
+  });
+
+  test("given an unknown status when transitioned then the failure names the status", () => {
+    // given
+    const unknownStatus = "nope";
+
+    // when
+    const failure = () =>
+      transitionNoteLifecycle(unknownStatus as NoteLifecycleStatus, "CHECK");
+
+    // then
+    expect(failure).toThrow(unknownStatus);
+  });
+
+  test("given a move the table does not define when transitioned then the failure names both the event and the status", () => {
+    // given
+    const status = "synced.clean";
+    const event = "PUSH";
+
+    // when
+    const failure = () => transitionNoteLifecycle(status, event);
+
+    // then
+    expect(failure).toThrow(`Event ${event} is not allowed in ${status}`);
+  });
+
+  test("given an event outside the vocabulary when transitioned then the failure says it is unknown", () => {
+    // given
+    const unknownEvent = "REWIND";
+
+    // when
+    const failure = () =>
+      transitionNoteLifecycle(
+        "synced.clean",
+        unknownEvent as NoteLifecycleEvent,
+      );
+
+    // then
+    expect(failure).toThrow(`Unknown lifecycle event: ${unknownEvent}`);
   });
 });
 

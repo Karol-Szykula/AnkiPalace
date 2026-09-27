@@ -216,3 +216,7 @@ How to work this board (binding, same rules as proj/docs/model.md):
 # Doing
 
 # Done
+- [x] [Quality] The lifecycle runs on the machine, not on the table: Not planned: found while auditing src/services/ for duplication, when the machine was about to be deleted for having no call site in src/.
+  transitionNoteLifecycle now resolves through noteLifecycleMachine (snapshot.can() separates a legal self-loop from an illegal event, transition() returns no actions to execute), so the architecture is table -> machine -> app. lifecycleTransitions is now read only to generate the machine and the diagram.
+  Three command call sites are untouched; they call the same function with the same throw contract. New tests pin the self-loop, both failure messages and the unknown-event message; the pre-existing conformance test (machine agrees with the table) is what proves the generation is lossless, and UC-25i runs all 132 status x event pairs through the new path.
+  Done-when: production resolves through the machine, the conformance test is the load-bearing proof, and ENT-02 says which of the two is the source of truth.

@@ -116,3 +116,36 @@ at the real path either way.
 
 Needs a user decision: keep one attachments folder per imported deck, or place
 each file next to the first note that references it.
+
+## xstate stays a production dependency
+
+The lifecycle runs as `table -> machine -> app`: `lifecycleTransitions` is the
+source of truth, `machineStates()` generates the xstate machine from it, and
+`transitionNoteLifecycle` resolves through that machine, so no command can
+bypass it. The conformance test in `tests/services/note-lifecycle.test.ts` runs
+every defined move through the machine and compares it with the table, which is
+what proves the generation is lossless.
+
+Two things are recorded here because both were got wrong first.
+
+**The machine was nearly deleted for being unused.** An audit found that
+`noteLifecycleMachine` has no call site in `src/` and concluded it was dead
+weight, with xstate occupying "94 KB of the bundle". The first half was right
+about the call sites and wrong about the meaning: the machine is what production
+*should* run on, and the table lookup was the deviation. The second half was
+simply a bad measurement — the span of unminified `xstate` identifiers in
+`main.js` is 94 KB, but xstate bundled and minified on its own is **36 KB**,
+0.8% of the release bundle. A dependency looked expensive because it was measured
+wrong, and a machine looked unused because nobody asked what it was *for*.
+
+**ENT-02 said the machine was the source of truth, and the code said the
+opposite** for the whole of Phase 1c. The fix was to change the code, not the
+contract: the architecture the contract described is the one worth having, and
+the table stays the single place a human edits. The one-line amendment to ENT-02
+records the direction that already existed in the code comments.
+
+The cost is one `resolveState` plus one `transition` per note per run instead of
+a map lookup, at three call sites. The benefit is that the transition table has
+an independent semantics checking it, and a legal self-loop (`synced.clean` on
+`CHECK`) is distinguished from an illegal event by `snapshot.can()` rather than
+by comparing a result with its input.
