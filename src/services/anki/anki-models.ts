@@ -249,3 +249,18 @@ export async function ensureDefaultModels(
 function builtInModelNames(): string[] {
   return builtInModels.map((definition) => definition.modelName);
 }
+
+const knownModelBases = [
+  basicModelName,
+  basicReversedModelName,
+  basicOptionalReversedModelName,
+  basicTypingModelName,
+  clozeModelName,
+];
+
+/** True when the model is one of the five built-ins, by name or by prefix. */
+export function isKnownModel(modelName: string): boolean {
+  return knownModelBases.some(
+    (base) => modelName === base || modelName.startsWith(base),
+  );
+}

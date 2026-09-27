@@ -230,3 +230,8 @@ How to work this board (binding, same rules as proj/docs/model.md):
   dev-reset.ts moved to src/dev/reset-data.ts, which is where AGENTS.md already said developer-only code belongs.
   The largest file went from 865 lines to 669 (import-deck), and nothing in services/ is over 474. The release bundle moved by 0.02 %.
   Done-when: 503 tests green with not one assertion changed, knip clean, and the tree says which layer a module sits in before you open it.
+- [x] [Quality] The import command does one thing: run the import: Third of the tidy. 669 lines went to 514, and the three things that were not about importing a deck left the file.
+  notes/fields.ts took model discovery, because asking a live deck which fields a notetype has is the same question as which fields a note has. isKnownModel went further, to anki/anki-models.ts, because it asks about the catalogue of built-ins - and that deleted a second list of the same five model names that import-deck was carrying. vault/paths.ts took the target-file resolution, which is where markdownFileName and the id-in-content check already lived for the name half of the same job.
+  What is left in the command is the command: the preview snapshot, the fields a note writes, the decision (status -> act), the plan, the write, and executeImport itself. Nothing in it converts text, reads Anki or resolves paths any more.
+  knip caught a second copy of parentFolderOf still living in commands/push.ts, which the first commit missed - the moved one is the only one now. Four exports in vault/paths.ts turned out to be internal and are no longer exported.
+  Done-when: 503 tests green with not one assertion changed, and no file in src/services/ is over 474 lines except the four commands, where it belongs.

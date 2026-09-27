@@ -1,3 +1,8 @@
+import { TFile } from "obsidian";
+import type { Vault } from "obsidian";
+import type { VaultNoteIndex } from "src/services/vault/vault";
+import { extractYamlNoteIds } from "src/services/vault/vault";
+
 /**
  * Where a note's file belongs, and what to call it when that name is taken.
  *
@@ -56,4 +61,97 @@ export function parentFolderOf(filePath: string): string {
 export function deckFolder(deckName: string, targetFolder: string): string {
   const deckPath = deckName.split("::").join("/");
   return targetFolder ? `${targetFolder}/${deckPath}` : deckPath;
+}
+
+function markdownFileName(title: string): {
+  stem: string;
+  extension: string;
+} {
+  const stem = title.endsWith(".md") ? title.slice(0, -".md".length) : title;
+  return { stem: stem || "note", extension: ".md" };
+}
+
+function yamlNoteIdInContent(content: string, noteId: number): boolean {
+  return extractYamlNoteIds(content).includes(noteId);
+}
+
+export async function resolveExistingNotePath(
+  vault: Vault,
+  vaultNoteIndex: VaultNoteIndex | undefined,
+  noteId: number,
+  takenPaths: Set<string>,
+): Promise<string | null> {
+  const indexedPath = vaultNoteIndex?.get(noteId);
+  if (!indexedPath || takenPaths.has(indexedPath)) {
+    return null;
+  }
+  const existing = await vault.getAbstractFileByPath(indexedPath);
+  if (!(existing instanceof TFile)) {
+    return null;
+  }
+  const content = await vault.read(existing);
+  if (!yamlNoteIdInContent(content, noteId)) {
+    return null;
+  }
+  takenPaths.add(indexedPath);
+  return indexedPath;
+}
+
+async function resolveRenameTargetPath(
+  vault: Vault,
+  desiredPath: string,
+  takenPaths: Set<string>,
+  selfPath: string,
+): Promise<string> {
+  return uniquePath("", desiredPath, takenPaths, (candidate) => {
+    const existing = vault.getAbstractFileByPath(candidate);
+    return existing !== null && existing.path !== selfPath;
+  });
+}
+
+export async function renameIndexedNoteFile(
+  vault: Vault,
+  indexedPath: string,
+  freshFileName: string,
+  takenPaths: Set<string>,
+): Promise<{ file: TFile; path: string } | null> {
+  const indexedFile = await vault.getAbstractFileByPath(indexedPath);
+  if (!(indexedFile instanceof TFile)) {
+    return null;
+  }
+  const parent = parentFolderOf(indexedPath);
+  const desiredPath = parent ? `${parent}/${freshFileName}` : freshFileName;
+  if (desiredPath === indexedPath) {
+    return { file: indexedFile, path: indexedPath };
+  }
+  const targetPath = await resolveRenameTargetPath(
+    vault,
+    desiredPath,
+    takenPaths,
+    indexedPath,
+  );
+  await vault.rename(indexedFile, targetPath);
+  takenPaths.delete(indexedPath);
+  takenPaths.add(targetPath);
+  return { file: indexedFile, path: targetPath };
+}
+
+export async function resolveNoteFilePath(
+  vault: Vault,
+  folder: string,
+  title: string,
+  noteId: number,
+  takenPaths: Set<string>,
+): Promise<string> {
+  const { stem } = markdownFileName(title);
+  return uniquePath(folder, `${stem}.md`, takenPaths, async (candidate) => {
+    const existing = vault.getAbstractFileByPath(candidate);
+    if (existing === null) {
+      return false;
+    }
+    if (!(existing instanceof TFile)) {
+      return true;
+    }
+    return !yamlNoteIdInContent(await vault.read(existing), noteId);
+  });
 }

@@ -2,16 +2,14 @@ import { useEffect, useState, type ChangeEvent, type JSX } from "react";
 import { mergeClasses } from "src/gui/classes";
 import type { Anki } from "src/services/anki/anki";
 import { startAsyncLoad } from "src/gui/import-wizard/start-async-load";
-import type { DeckModel } from "src/services/commands/import-deck";
+import type { DeckModel } from "src/services/notes/fields";
 import type {
   FieldMapping as FieldMap,
   FieldTarget,
 } from "src/entities/field-mapping";
 import { fieldTargets, resolveFieldMapping } from "src/entities/field-mapping";
-import {
-  discoverDeckModels,
-  isKnownModel,
-} from "src/services/commands/import-deck";
+import { isKnownModel } from "src/services/anki/anki-models";
+import { discoverDeckModels } from "src/services/notes/fields";
 import { builtInPackFor } from "src/services/notes/packs";
 import {
   commonWizardClasses,

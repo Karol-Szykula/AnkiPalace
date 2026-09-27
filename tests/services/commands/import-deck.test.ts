@@ -7,6 +7,8 @@ import "obsidian-test-mocks/jest-setup";
 import { App } from "obsidian-test-mocks/obsidian";
 import type { TFile as ObsidianTFile, Vault as ObsidianVault } from "obsidian";
 import { Anki } from "src/services/anki/anki";
+import { isKnownModel } from "src/services/anki/anki-models";
+import { discoverDeckModels } from "src/services/notes/fields";
 import { deckFolder } from "src/services/vault/paths";
 import { fetchDeckNotes } from "src/services/anki/read";
 import { normalizeNoteText } from "src/services/notes/text";
@@ -14,11 +16,7 @@ import { setActiveDocument } from "../../mocks/obsidian";
 import { basicModelName } from "src/conf/constants";
 import type { ExecuteImportRequest } from "src/services/commands/import-deck";
 import type { FieldMapping } from "src/entities/field-mapping";
-import {
-  discoverDeckModels,
-  executeImport,
-  isKnownModel,
-} from "src/services/commands/import-deck";
+import { executeImport } from "src/services/commands/import-deck";
 import { AnkiConnectMock } from "../../mocks/anki-connect";
 import { required } from "../../helpers/required";
 import { jsonEngine } from "../../helpers/json-engine";

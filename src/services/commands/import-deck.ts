@@ -1,18 +1,18 @@
 import { TFile } from "obsidian";
 import type { Vault } from "obsidian";
 import type { Anki } from "src/services/anki/anki";
-import { deckSearchQuery, withDeckNames } from "src/services/anki/read";
+import { withDeckNames } from "src/services/anki/read";
 import {
   deckFolder,
-  parentFolderOf,
-  uniquePath,
+  renameIndexedNoteFile,
+  resolveExistingNotePath,
+  resolveNoteFilePath,
 } from "src/services/vault/paths";
 import type { AnkiNoteInfo } from "src/entities/anki-note";
 import type { FieldMapping } from "src/entities/field-mapping";
 import type { VaultNoteIndex } from "src/services/vault/vault";
 import {
   ensureFolderExists,
-  extractYamlNoteIds,
   findVaultNoteBlock,
 } from "src/services/vault/vault";
 import {
@@ -44,29 +44,6 @@ import {
 } from "src/services/notes/fields";
 import { noteMediaFilenames } from "src/services/notes/text";
 import { obsidianYamlEngine, type YamlEngine } from "src/services/yaml-engine";
-import {
-  basicModelName,
-  basicOptionalReversedModelName,
-  basicReversedModelName,
-  basicTypingModelName,
-  clozeModelName,
-} from "src/conf/constants";
-
-export interface DeckModel {
-  fields: string[];
-  modelName: string;
-  sampleValues: Record<string, string>;
-}
-
-const knownModelBases = [
-  basicModelName,
-  basicReversedModelName,
-  basicOptionalReversedModelName,
-  basicTypingModelName,
-  clozeModelName,
-];
-
-const discoverySampleSize = 100;
 
 export interface ClassifiedNote {
   isInVaultIndex: boolean;
@@ -90,144 +67,6 @@ export function isNoteUpdatedSince(
   sync: NoteSyncState,
 ): boolean {
   return (note.mod ?? 0) > noteSyncRev(sync, note.noteId);
-}
-
-export function isKnownModel(modelName: string): boolean {
-  return knownModelBases.some(
-    (base) => modelName === base || modelName.startsWith(base),
-  );
-}
-
-async function fetchDiscoverySample(
-  anki: Anki,
-  deckName: string,
-): Promise<AnkiNoteInfo[]> {
-  const noteIds = await anki.findNotes(deckSearchQuery(deckName));
-  return anki.getNotes(noteIds.slice(0, discoverySampleSize));
-}
-
-function mergeNoteFields(model: DeckModel, note: AnkiNoteInfo) {
-  for (const [field, content] of Object.entries(note.fields)) {
-    if (!model.fields.includes(field)) {
-      model.fields.push(field);
-    }
-    if (!(field in model.sampleValues)) {
-      model.sampleValues[field] = content.value;
-    }
-  }
-}
-
-function groupNotesByModel(notes: AnkiNoteInfo[]): DeckModel[] {
-  const models = new Map<string, DeckModel>();
-  for (const note of notes) {
-    const modelName = note.modelName ?? "Unknown";
-    if (!models.has(modelName)) {
-      models.set(modelName, { modelName, fields: [], sampleValues: {} });
-    }
-    const model = models.get(modelName);
-    if (model !== undefined) {
-      mergeNoteFields(model, note);
-    }
-  }
-  return [...models.values()];
-}
-
-export async function discoverDeckModels(
-  anki: Anki,
-  deckName: string,
-): Promise<DeckModel[]> {
-  const notes = await fetchDiscoverySample(anki, deckName);
-  return groupNotesByModel(notes);
-}
-
-function markdownFileName(title: string): { stem: string; extension: string } {
-  const stem = title.endsWith(".md") ? title.slice(0, -".md".length) : title;
-  return { stem: stem || "note", extension: ".md" };
-}
-
-function yamlNoteIdInContent(content: string, noteId: number): boolean {
-  return extractYamlNoteIds(content).includes(noteId);
-}
-
-async function resolveExistingNotePath(
-  vault: Vault,
-  vaultNoteIndex: VaultNoteIndex | undefined,
-  noteId: number,
-  takenPaths: Set<string>,
-): Promise<string | null> {
-  const indexedPath = vaultNoteIndex?.get(noteId);
-  if (!indexedPath || takenPaths.has(indexedPath)) {
-    return null;
-  }
-  const existing = await vault.getAbstractFileByPath(indexedPath);
-  if (!(existing instanceof TFile)) {
-    return null;
-  }
-  const content = await vault.read(existing);
-  if (!yamlNoteIdInContent(content, noteId)) {
-    return null;
-  }
-  takenPaths.add(indexedPath);
-  return indexedPath;
-}
-
-async function resolveRenameTargetPath(
-  vault: Vault,
-  desiredPath: string,
-  takenPaths: Set<string>,
-  selfPath: string,
-): Promise<string> {
-  return uniquePath("", desiredPath, takenPaths, (candidate) => {
-    const existing = vault.getAbstractFileByPath(candidate);
-    return existing !== null && existing.path !== selfPath;
-  });
-}
-
-async function renameIndexedNoteFile(
-  vault: Vault,
-  indexedPath: string,
-  freshFileName: string,
-  takenPaths: Set<string>,
-): Promise<{ file: TFile; path: string } | null> {
-  const indexedFile = await vault.getAbstractFileByPath(indexedPath);
-  if (!(indexedFile instanceof TFile)) {
-    return null;
-  }
-  const parent = parentFolderOf(indexedPath);
-  const desiredPath = parent ? `${parent}/${freshFileName}` : freshFileName;
-  if (desiredPath === indexedPath) {
-    return { file: indexedFile, path: indexedPath };
-  }
-  const targetPath = await resolveRenameTargetPath(
-    vault,
-    desiredPath,
-    takenPaths,
-    indexedPath,
-  );
-  await vault.rename(indexedFile, targetPath);
-  takenPaths.delete(indexedPath);
-  takenPaths.add(targetPath);
-  return { file: indexedFile, path: targetPath };
-}
-
-async function resolveNoteFilePath(
-  vault: Vault,
-  folder: string,
-  title: string,
-  noteId: number,
-  takenPaths: Set<string>,
-): Promise<string> {
-  const { stem } = markdownFileName(title);
-  return uniquePath(folder, `${stem}.md`, takenPaths, async (candidate) => {
-    const existing = vault.getAbstractFileByPath(candidate);
-    if (existing === null) {
-      return false;
-    }
-    if (!(existing instanceof TFile)) {
-      return true;
-    }
-    return !yamlNoteIdInContent(await vault.read(existing), noteId);
-  });
 }
 
 export interface ExecuteImportRequest {

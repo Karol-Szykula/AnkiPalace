@@ -5,6 +5,7 @@ import type { ISettings } from "src/conf/settings";
 import type { AnkiNote, AnkiNoteInfo } from "src/entities/anki-note";
 import { CustomMappedNote } from "src/entities/custom-mapped-note";
 import type { Anki } from "src/services/anki/anki";
+import { parentFolderOf } from "src/services/vault/paths";
 import { escapeRegExp } from "src/utils";
 import { fetchNotesByIdMap } from "src/services/anki/read";
 import type { FieldTarget } from "src/entities/field-mapping";
@@ -65,11 +66,6 @@ function isAudio(filename: string): boolean {
   const dot = filename.lastIndexOf(".");
   const extension = dot < 0 ? "" : filename.slice(dot + 1).toLowerCase();
   return audioExtensions.includes(extension);
-}
-
-function parentFolderOf(filePath: string): string {
-  const slash = filePath.lastIndexOf("/");
-  return slash < 0 ? "" : filePath.slice(0, slash);
 }
 
 function resolveReferenceFile(
