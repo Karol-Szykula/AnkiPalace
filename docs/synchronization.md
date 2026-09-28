@@ -56,7 +56,7 @@ stateDiagram-v2
 - FORCE_PULL: the user marked one note "Anki wins" in the import wizard although its vault side is newer, so Anki's version is written over it (synced.vaultNewer / synced.diverged -> synced.clean). Only the wizard issues it, always per note, and only when that note is marked; where the default already takes Anki's version (a new note, an Anki-newer note) marking it changes nothing, and a clean note is never overwritten because the toggle is on.
 - FORCE_PUSH: the mirror image - the user marked one note "Obsidian wins" in the export wizard, so the vault version is written to Anki even though Anki's side is newer or the note was edited in both places (synced.ankiNewer / synced.diverged -> synced.clean). Same rules as FORCE_PULL: per note, off by default, counted in the report, and no effect where the export already takes the vault version.
 - ENROLL: link by ID with no sync record, store mod + hash as baseline (linked.unenrolled / vaultOnly.unenrolled -> synced.clean).
-- RESURRECT: a vault-deleted file comes back because Anki is newer (ankiOnly.fileDeleted -> synced.ankiNewer), or because the user marked that one note "Anki wins" in the import wizard; that forced import also clears the tombstone once UC-30 persists one.
+- RESURRECT: a vault-deleted file comes back because Anki is newer (ankiOnly.fileDeleted -> synced.ankiNewer), or because the user marked that one note "Anki wins" in the import wizard; that forced import also clears the tombstone once OBSID-19 persists one.
 - DELETE_FILE: note is gone in Anki, delete the vault file (vaultOnly.ankiDeleted -> orphaned).
 - PURGE: drop stale sync records (ankiOnly.fileDeleted / orphaned -> orphaned).
 - SKIP: leave an unimported note alone (ankiOnly.neverImported -> ankiOnly.neverImported).
@@ -94,7 +94,7 @@ different allowed action per command.
 | `synced.ankiNewer` | block hash equals `lastHash`, Anki `mod` newer | PULL: file rewritten from Anki | Anki | `refreshed` |
 | `synced.diverged` | both sides changed | `isAnkiNewer` decides: PULL when Anki is newer, otherwise PUSH | newest side | `refreshed` or `pushed` |
 | `linked.unenrolled` | block has an ID, no ledger record | ENROLL: baseline hash from the Anki side, then re-classify | decided by the row above | `enrolled`, then the follow-up counter |
-| `ankiOnly.fileDeleted` | ledger record exists, block or file gone | `Sync` only counts it and the import wizard only offers it; the resurrect-or-purge verdict is UC-30, an explicit "Anki wins" resurrects right now | decided in UC-30 | `missing` |
+| `ankiOnly.fileDeleted` | ledger record exists, block or file gone | `Sync` only counts it and the import wizard only offers it; the resurrect-or-purge verdict is OBSID-19, an explicit "Anki wins" resurrects right now | decided in OBSID-19 | `missing` |
 | record without a live Anki note | not returned by `findNotes` | block removed from its file, record deleted | Anki | `deleted`, `purgedRecords` |
 | model without a pack | no built-in pack, no saved pack JSON | skipped, never guessed | none | `skippedUnmapped` |
 | block or file missing | no vault side to compare | skipped, never recreated | none | `missing` |
@@ -116,7 +116,7 @@ between decks in Anki is undone by the next sync.
   comparing timestamps: it either asks the user (force) or leaves the note to
   `Sync`. Ties (less than a second apart) currently go to the vault. A
   configurable `syncTieWinner` plus a threshold and a tie report is still open
-  (UC-32).
+  (OBSID-21).
 - After any write to Anki the ledger stores the real post-write `mod` (a
   `notesInfo` round trip), so the next run is a no-op instead of a
   ping-pong of "newer" verdicts.
@@ -139,7 +139,7 @@ Anki's version whatever the state: a newer vault note is overwritten
 that force a vault-newer note is reported as `skipped (newer in Obsidian)` and a
 note whose file is gone as `left to Sync (no file)`. The export wizard is the
 mirror image (deck-first, pushes what changed in Obsidian, "Obsidian wins"
-per note); the deck-first version is still UC-36, the bulk engine that
+per note); the deck-first version is still OBSID-25, the bulk engine that
 implements the same rules already exists. `Sync` is the only command that
 resolves clocks and deletions. The rest of this section describes what the
 commands do today.
@@ -153,7 +153,7 @@ commands do today.
   deleted in Anki are never resolved here by a guess: they are counted as
   `left to Sync`, and the per-row force "Obsidian wins" (`FORCE_PUSH`, plus
   `EXPORT` for a note deleted in Anki) is the only way to write the Obsidian
-  version anyway. The deck-first wizard that mirrors the import wizard is UC-36;
+  version anyway. The deck-first wizard that mirrors the import wizard is OBSID-25;
   this command is the bulk engine behind it. Models are assured on demand:
   after planning, only the models the planned creates need are checked and the
   missing ones created, and a note of a mismatched or name-colliding model is
@@ -163,7 +163,7 @@ commands do today.
 - `Sync` — bidirectional maintenance of the notes both wizards have already
   introduced, and the only command that resolves clocks: it first fills missing
   block IDs by hash, then walks the decks from `deckImportSnapshots` and applies
-  the table above. Making the ledger its scope is UC-28.
+  the table above. Making the ledger its scope is OBSID-16.
 - `Purge ledger` — a rare cleanup action in the command palette, vault-only (no
   Anki needed). It forgets every ledger record whose id is nowhere in the vault,
   and keeps the rest: records with a live block, records in ignored folders
@@ -171,7 +171,7 @@ commands do today.
   guessed). It never touches files. Afterwards the import wizard offers the
   forgotten notes as new again.
 
-### Known limitations (tracked as UC-28 and UC-33 on the board in `proj/`)
+### Known limitations
 
 - A note added in Anki to a deck that was imported earlier is skipped silently:
   it has neither a ledger record nor a block, so it is not counted and not
@@ -181,4 +181,4 @@ commands do today.
   updated. A purge only ever removes records whose note Anki confirms is
   gone, so such a record is safe. Making the ledger the scope (with the deck
   stored on the record) would cover it too and is the remaining scope of
-  UC-28. Ignored directories are plugin-wide in UC-33.
+  OBSID-16. Ignored directories are plugin-wide in OBSID-33.

@@ -19,7 +19,7 @@ const unreachableInTheTable: Record<string, string> = {
   "orphaned PURGE":
     "the purge path in Sync forgets the record outside the resolver; UC-25l documents the action",
   "vaultOnly.ankiDeleted DELETE_FILE":
-    "no producer exists: Sync does not handle this state yet, UC-31 adds the action",
+    "no producer exists: Sync does not handle this state yet, OBSID-20 adds the action",
 };
 
 function emittedEvents(): Set<string> {

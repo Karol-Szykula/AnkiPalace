@@ -49,7 +49,7 @@ Sync has no force dimension: it is the one command that decides on its own.
 | state | kind | default | forced | owner | why |
 | --- | --- | --- | --- | --- |
 | `ankiOnly.neverImported` | `create` | `OUT_OF_SCOPE` | `-` | `import` | Untracked Anki note: counted as needing import. |
-| `ankiOnly.fileDeleted` | `missing` | `OUT_OF_SCOPE` | `-` | `sync` | No file: the purge path handles it outside this table, the tombstone rule arrives with UC-30. |
+| `ankiOnly.fileDeleted` | `missing` | `OUT_OF_SCOPE` | `-` | `sync` | No file: the purge path handles it outside this table, the tombstone rule arrives with OBSID-19. |
 | `synced.clean` | `quiet` | `CHECK` | `-` | `sync` | Both sides match: nothing to do. |
 | `synced.ankiNewer` | `overwrite` | `PULL` | `-` | `sync` | Newer in Anki: refreshes the vault file. |
 | `synced.vaultNewer` | `overwrite` | `PUSH` | `-` | `sync` | Newer in Obsidian: pushes to Anki. |
@@ -57,5 +57,5 @@ Sync has no force dimension: it is the one command that decides on its own.
 | `linked.unenrolled` | `quiet` | `OUT_OF_SCOPE` | `-` | `wizard` | Enrolling is the wizards' job. |
 | `vaultOnly.unexported` | `create` | `OUT_OF_SCOPE` | `-` | `export` | Vault only: the export wizard creates it. |
 | `vaultOnly.unenrolled` | `quiet` | `OUT_OF_SCOPE` | `-` | `wizard` | Enrolling is the wizards' job. |
-| `vaultOnly.ankiDeleted` | `missing` | `OUT_OF_SCOPE` | `-` | `sync` | Gone from Anki: the purge path handles it, DELETE_FILE arrives with UC-31. |
+| `vaultOnly.ankiDeleted` | `missing` | `OUT_OF_SCOPE` | `-` | `sync` | Gone from Anki: the purge path handles it, DELETE_FILE arrives with OBSID-20. |
 | `orphaned` | `missing` | `OUT_OF_SCOPE` | `-` | `purge` | Only a stale record left: Purge ledger forgets it. |

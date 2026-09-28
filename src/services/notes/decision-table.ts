@@ -195,7 +195,7 @@ const decisions: Record<
       kind: "missing",
       owner: "sync",
       rationale:
-        "No file: the purge path handles it outside this table, the tombstone rule arrives with UC-30.",
+        "No file: the purge path handles it outside this table, the tombstone rule arrives with OBSID-19.",
     },
     "synced.clean": {
       act: "CHECK",
@@ -244,7 +244,7 @@ const decisions: Record<
       kind: "missing",
       owner: "sync",
       rationale:
-        "Gone from Anki: the purge path handles it, DELETE_FILE arrives with UC-31.",
+        "Gone from Anki: the purge path handles it, DELETE_FILE arrives with OBSID-20.",
     },
     orphaned: {
       act: OUT_OF_SCOPE,

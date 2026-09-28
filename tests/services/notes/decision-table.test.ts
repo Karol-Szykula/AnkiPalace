@@ -180,7 +180,7 @@ describe("the decision table is total", () => {
       const row = syncDecisionFor("sync", status);
       expect(row.act).toBe(OUT_OF_SCOPE);
       expect(row.owner).toBe("sync");
-      expect(row.rationale).toMatch(/UC-3[01]/);
+      expect(row.rationale).toMatch(/OBSID-(19|20)/);
     }
   });
 });
