@@ -7,8 +7,8 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Anki } from "src/services/anki/anki";
-import { DeckSelection } from "src/gui/import-wizard/components/DeckSelection";
-import { AnkiConnectMock } from "../../mocks/anki-connect";
+import { DeckSelection } from "src/gui/note-transfer-wizard/import/components/DeckSelection";
+import { AnkiConnectMock } from "../../../mocks/anki-connect";
 
 AnkiConnectMock.install();
 
@@ -219,7 +219,9 @@ describe("DeckSelection", () => {
     const radio = await screen.findByRole("radio", { name: /Languages/ });
 
     // then
-    expect(radio).toHaveClass("flashcards-import-wizard-modal__deck-radio");
+    expect(radio).toHaveClass(
+      "flashcards-note-transfer-wizard-modal__scope-radio",
+    );
   });
 
   test("given an empty deck when rendered then greys it out without a label element", async () => {
@@ -233,12 +235,12 @@ describe("DeckSelection", () => {
     // then
     expect(radio).toBeDisabled();
     expect(
-      radio.closest("div.flashcards-import-wizard-modal__list-row"),
-    ).toHaveClass("flashcards-import-wizard-modal__deck-row--disabled");
+      radio.closest("div.flashcards-note-transfer-wizard-modal__list-row"),
+    ).toHaveClass("flashcards-note-transfer-wizard-modal__scope-row--disabled");
     expect(radio.closest("label")).toBeNull();
     expect(
       radio.closest(
-        "span.flashcards-import-wizard-modal__labeled-control--disabled",
+        "span.flashcards-note-transfer-wizard-modal__labeled-control--disabled",
       ),
     ).not.toBeNull();
   });
@@ -266,7 +268,7 @@ describe("DeckSelection", () => {
     // then
     expect(radio.closest("label")).not.toBeNull();
     expect(radio.closest("label")).not.toHaveClass(
-      "flashcards-import-wizard-modal__labeled-control--disabled",
+      "flashcards-note-transfer-wizard-modal__labeled-control--disabled",
     );
   });
 

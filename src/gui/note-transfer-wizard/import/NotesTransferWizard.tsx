@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type JSX } from "react";
-import { startAsyncLoad } from "src/gui/import-wizard/start-async-load";
+import { startAsyncLoad } from "src/gui/note-transfer-wizard/import/start-async-load";
 import type { Vault } from "obsidian";
 import { Anki } from "src/services/anki/anki";
 import { logger } from "src/services/logger";
@@ -16,19 +16,19 @@ import {
 } from "src/services/notes/packs";
 import { noteShapeFor } from "src/entities/note-shapes";
 import { mergeFieldMappings } from "src/entities/field-mapping";
-import { useDeckPreview } from "src/gui/import-wizard/use-deck-preview";
-import { PageIndicator } from "src/gui/import-wizard/components/PageIndicator";
-import { DeckSelection } from "src/gui/import-wizard/components/DeckSelection";
-import { FieldMapping } from "src/gui/import-wizard/components/FieldMapping";
-import { NotesPreview } from "src/gui/import-wizard/components/NotesPreview";
-import { ImportExecution } from "src/gui/import-wizard/components/ImportExecution";
-import { Footer } from "src/gui/import-wizard/components/Footer";
+import { useDeckPreview } from "src/gui/note-transfer-wizard/import/use-deck-preview";
+import { PageIndicator } from "src/gui/note-transfer-wizard/import/components/PageIndicator";
+import { DeckSelection } from "src/gui/note-transfer-wizard/import/components/DeckSelection";
+import { FieldMapping } from "src/gui/note-transfer-wizard/import/components/FieldMapping";
+import { NotesPreview } from "src/gui/note-transfer-wizard/import/components/NotesPreview";
+import { ImportExecution } from "src/gui/note-transfer-wizard/import/components/ImportExecution";
+import { Footer } from "src/gui/note-transfer-wizard/import/components/Footer";
 import {
   commonWizardClasses,
-  importWizardClasses,
-} from "src/gui/import-wizard/classes";
+  noteTransferWizardClasses,
+} from "src/gui/note-transfer-wizard/import/classes";
 
-export interface ImportWizardProps {
+export interface NotesTransferWizardProps {
   readonly onCancel: () => void;
   readonly saveSettings: () => Promise<void>;
   readonly settings: ISettings;
@@ -51,12 +51,12 @@ function canAdvanceFromPage(
   return currentPage < 4;
 }
 
-export function ImportWizard({
+export function NotesTransferWizard({
   onCancel,
   saveSettings,
   settings,
   vault,
-}: ImportWizardProps): JSX.Element {
+}: NotesTransferWizardProps): JSX.Element {
   const [anki] = useState(() => new Anki());
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedDeckName, setSelectedDeckName] = useState("");
@@ -211,7 +211,7 @@ export function ImportWizard({
   }
 
   return (
-    <div className={importWizardClasses.modal}>
+    <div className={noteTransferWizardClasses.modal}>
       <PageIndicator currentPage={currentPage} pages={pageTitles} />
       {currentPage === 1 && (
         <DeckSelection

@@ -1,6 +1,6 @@
 import type { JSX } from "react";
 import { mergeClasses } from "src/gui/classes";
-import { pageIndicatorClasses } from "src/gui/import-wizard/classes";
+import { pageIndicatorClasses } from "src/gui/note-transfer-wizard/import/classes";
 
 export interface PageIndicatorProps {
   readonly connectors?: boolean;

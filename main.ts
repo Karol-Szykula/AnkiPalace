@@ -2,7 +2,7 @@ import { addIcon, Notice, Plugin } from "obsidian";
 import type { ISettings } from "src/conf/settings";
 import { normalizeSettings } from "src/conf/normalize-settings";
 import { SettingsTab } from "src/gui/settings-tab";
-import { ImportModal } from "src/gui/import-wizard/import-modal";
+import { NotesTransferModal } from "src/gui/note-transfer-wizard/import/notes-transfer-modal";
 import { Anki } from "src/services/anki/anki";
 import { logger } from "src/services/logger";
 import { describeUnknown } from "src/services/anki/anki";
@@ -72,7 +72,7 @@ export default class ObsidianFlashcard extends Plugin {
       id: "import-deck-from-anki",
       name: importDeckCommandName,
       callback: () => {
-        new ImportModal(this.app, this.settings, () =>
+        new NotesTransferModal(this.app, this.settings, () =>
           this.saveData(this.settings),
         )
           .setTitle("Import deck from Anki")

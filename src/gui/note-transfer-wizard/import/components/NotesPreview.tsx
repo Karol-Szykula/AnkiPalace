@@ -1,6 +1,6 @@
 import { useEffect, useState, type JSX } from "react";
 import { mergeClasses } from "src/gui/classes";
-import { startAsyncLoad } from "src/gui/import-wizard/start-async-load";
+import { startAsyncLoad } from "src/gui/note-transfer-wizard/import/start-async-load";
 import type { Anki } from "src/services/anki/anki";
 import type { AnkiNoteInfo } from "src/entities/anki-note";
 import type { Vault } from "obsidian";
@@ -26,11 +26,11 @@ import { normalizeNoteText } from "src/services/notes/text";
 import type { ClassifiedNote } from "src/services/commands/import-deck";
 import type { NotePreviewStatus } from "src/services/notes/lifecycle";
 import {
-  notesPreviewClasses,
+  transferNotesPreviewClasses,
   commonWizardClasses,
-} from "src/gui/import-wizard/classes";
-import { List } from "src/gui/import-wizard/list/List";
-import { ListRow } from "src/gui/import-wizard/list/ListRow";
+} from "src/gui/note-transfer-wizard/import/classes";
+import { List } from "src/gui/note-transfer-wizard/import/list/List";
+import { ListRow } from "src/gui/note-transfer-wizard/import/list/ListRow";
 
 export interface NotesPreviewProps {
   readonly anki: Anki;
@@ -99,18 +99,18 @@ function isImportSelectedByDefault(status: NoteLifecycleStatus): boolean {
 function previewBadgeClass(item: ClassifiedNote): string {
   const { kind } = importRow(item);
   if (kind === "create") {
-    return notesPreviewClasses.previewBadgeNew;
+    return transferNotesPreviewClasses.previewBadgeNew;
   }
   if (kind === "quiet") {
-    return notesPreviewClasses.previewBadgeImported;
+    return transferNotesPreviewClasses.previewBadgeImported;
   }
   if (kind === "skip" || kind === "conflict") {
-    return notesPreviewClasses.previewBadgeSkipped;
+    return transferNotesPreviewClasses.previewBadgeSkipped;
   }
   if (kind === "overwrite") {
-    return notesPreviewClasses.previewBadgeOverwrite;
+    return transferNotesPreviewClasses.previewBadgeOverwrite;
   }
-  return notesPreviewClasses.previewBadgeImported;
+  return transferNotesPreviewClasses.previewBadgeImported;
 }
 
 function previewBadgeOutcome(item: ClassifiedNote): string {
@@ -224,7 +224,7 @@ function NoteRow({
           <span>{noteSummary(item.note)}</span>
           <span
             className={mergeClasses(
-              notesPreviewClasses.previewBadge,
+              transferNotesPreviewClasses.previewBadge,
               previewBadgeClass(item),
             )}
           >
@@ -234,9 +234,9 @@ function NoteRow({
       ]}
       className={mergeClasses(
         className,
-        notesPreviewClasses.previewRow,
+        transferNotesPreviewClasses.previewRow,
         item.previewStatus === "upToDate"
-          ? notesPreviewClasses.previewRowImported
+          ? transferNotesPreviewClasses.previewRowImported
           : undefined,
       )}
       key={noteId}
@@ -445,7 +445,7 @@ export function NotesPreview({
         Cards to import: {notesSelectedToImportCount}/{classified.length}.
       </p>
       {isNothingSelected && (
-        <p className={notesPreviewClasses.noticeText}>
+        <p className={transferNotesPreviewClasses.noticeText}>
           {selectionNotice(classified)}
         </p>
       )}
@@ -455,7 +455,7 @@ export function NotesPreview({
         </button>
       )}
       {notesToResurrect > 0 && (
-        <p className={notesPreviewClasses.noticeText}>
+        <p className={transferNotesPreviewClasses.noticeText}>
           {resurrectionWarning(notesToResurrect)}
         </p>
       )}

@@ -1,6 +1,6 @@
 import { useEffect, useState, type JSX } from "react";
 import { mergeClasses } from "src/gui/classes";
-import { startAsyncLoad } from "src/gui/import-wizard/start-async-load";
+import { startAsyncLoad } from "src/gui/note-transfer-wizard/import/start-async-load";
 import type { Anki } from "src/services/anki/anki";
 import type { VaultNoteIndex } from "src/services/vault/vault";
 import type { NoteSyncState } from "src/services/commands/import-deck";
@@ -8,10 +8,13 @@ import { isNoteUpdatedSince } from "src/services/commands/import-deck";
 import { deckSearchQuery, fetchDeckNotes } from "src/services/anki/read";
 import {
   commonWizardClasses,
-  deckSelectionClasses,
-} from "src/gui/import-wizard/classes";
-import { List } from "src/gui/import-wizard/list/List";
-import { LabeledControl, ListRow } from "src/gui/import-wizard/list/ListRow";
+  scopeSelectionClasses,
+} from "src/gui/note-transfer-wizard/import/classes";
+import { List } from "src/gui/note-transfer-wizard/import/list/List";
+import {
+  LabeledControl,
+  ListRow,
+} from "src/gui/note-transfer-wizard/import/list/ListRow";
 
 export interface DeckSelectionProps {
   readonly anki: Anki;
@@ -197,9 +200,9 @@ export function DeckSelection({
               control={
                 <input
                   checked={deckName === selectedDeckName}
-                  className={deckSelectionClasses.deckRadio}
+                  className={scopeSelectionClasses.scopeRadio}
                   disabled={isDisabled}
-                  name="flashcards-import-wizard-modal-deck"
+                  name="flashcards-note-transfer-wizard-modal-scope"
                   onChange={() => onSelectDeckName(deckName)}
                   title={tooltip}
                   type="radio"
@@ -210,7 +213,7 @@ export function DeckSelection({
               disabled={isDisabled}
               key="select"
               label={
-                <span className={deckSelectionClasses.deckLabelText}>
+                <span className={scopeSelectionClasses.scopeLabelText}>
                   {shortName}
                 </span>
               }
@@ -224,14 +227,14 @@ export function DeckSelection({
             <ListRow
               cells={deckRowCells}
               className={mergeClasses(
-                deckSelectionClasses.deckRow,
-                isDisabled ? deckSelectionClasses.deckRowDisabled : undefined,
+                scopeSelectionClasses.scopeRow,
+                isDisabled ? scopeSelectionClasses.scopeRowDisabled : undefined,
               )}
               disabled={isDisabled}
               key={deckName}
               onSelect={() => onSelectDeckName(deckName)}
               style={{
-                paddingLeft: `calc(${depth} * var(--flashcards-import-wizard-modal__row-indent) + 0.25rem)`,
+                paddingLeft: `calc(${depth} * var(--flashcards-note-transfer-wizard-modal__row-indent) + 0.25rem)`,
               }}
             />
           );

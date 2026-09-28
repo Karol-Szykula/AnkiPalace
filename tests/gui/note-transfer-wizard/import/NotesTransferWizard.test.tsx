@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  *
- * Integration tests for the ImportWizard first page: real in-memory vault
+ * Integration tests for the NotesTransferWizard first page: real in-memory vault
  * plus mocked AnkiConnect, asserting the composed DeckSelection view,
  * page indicator labels and footer button states.
  */
@@ -10,9 +10,9 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { App } from "obsidian-test-mocks/obsidian";
 import type { Vault as ObsidianVault } from "obsidian";
-import { ImportWizard } from "src/gui/import-wizard/ImportWizard";
-import { createSettings } from "../../helpers/settings";
-import { AnkiConnectMock } from "../../mocks/anki-connect";
+import { NotesTransferWizard } from "src/gui/note-transfer-wizard/import/NotesTransferWizard";
+import { createSettings } from "../../../helpers/settings";
+import { AnkiConnectMock } from "../../../mocks/anki-connect";
 
 AnkiConnectMock.install();
 
@@ -73,7 +73,7 @@ function renderWizard(files: Record<string, string> = {}) {
   const onCancel = jest.fn();
   const saveSettings = jest.fn(async (): Promise<void> => undefined);
   render(
-    <ImportWizard
+    <NotesTransferWizard
       onCancel={onCancel}
       saveSettings={saveSettings}
       settings={createSettings()}
@@ -88,7 +88,7 @@ function renderWizardWithVault(files: Record<string, string> = {}) {
   const onCancel = jest.fn();
   const saveSettings = jest.fn(async (): Promise<void> => undefined);
   render(
-    <ImportWizard
+    <NotesTransferWizard
       onCancel={onCancel}
       saveSettings={saveSettings}
       settings={createSettings()}
@@ -98,7 +98,7 @@ function renderWizardWithVault(files: Record<string, string> = {}) {
   return { app, onCancel };
 }
 
-describe("ImportWizard - first page", () => {
+describe("NotesTransferWizard - first page", () => {
   const importedNoteFileName = "Note.md";
   const importedNoteId = 1111111111111;
   const importedNoteContent = `\`\`\`note-form\nfront: Q\nback: A\nid: ${importedNoteId}\n\`\`\`\n`;
@@ -195,7 +195,7 @@ describe("ImportWizard - first page", () => {
   });
 });
 
-describe("ImportWizard - last page", () => {
+describe("NotesTransferWizard - last page", () => {
   test("given deck notes when the cards page is reached then shows Import in the footer instead of Next", async () => {
     // given
     respondWithNotes([

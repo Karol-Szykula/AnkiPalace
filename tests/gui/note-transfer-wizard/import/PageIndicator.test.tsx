@@ -5,7 +5,7 @@
  * active/done states and optional connectors.
  */
 import { render, screen } from "@testing-library/react";
-import { PageIndicator } from "src/gui/import-wizard/components/PageIndicator";
+import { PageIndicator } from "src/gui/note-transfer-wizard/import/components/PageIndicator";
 
 const pageTitles = ["Deck", "Fields", "Cards", "Save"];
 
@@ -44,7 +44,7 @@ describe("PageIndicator", () => {
 
     // then
     expect(title.parentElement).toHaveClass(
-      "flashcards-import-wizard-modal__page--active",
+      "flashcards-note-transfer-wizard-modal__page--active",
     );
   });
 

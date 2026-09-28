@@ -10,13 +10,13 @@ import "obsidian-test-mocks/jest-setup";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Anki } from "src/services/anki/anki";
-import { NotesPreview } from "src/gui/import-wizard/components/NotesPreview";
+import { NotesPreview } from "src/gui/note-transfer-wizard/import/components/NotesPreview";
 import type { Vault as ObsidianVault } from "obsidian";
 import { App } from "obsidian-test-mocks/obsidian";
 import { computeContentHash } from "src/services/notes/content-hash";
 import { syncedCleanRecord } from "src/services/notes/lifecycle";
 import type { NoteLifecycleRecord } from "src/services/notes/lifecycle";
-import { AnkiConnectMock } from "../../mocks/anki-connect";
+import { AnkiConnectMock } from "../../../mocks/anki-connect";
 
 AnkiConnectMock.install();
 
@@ -164,7 +164,7 @@ async function renderPreview(scenarioOverride?: PreviewScenario) {
 function previewRow(summaryText: string): HTMLElement {
   const summary = screen.getByText(summaryText);
   const row = summary.closest(
-    "div.flashcards-import-wizard-modal__preview-row",
+    "div.flashcards-note-transfer-wizard-modal__preview-row",
   );
   if (row === null) {
     throw new Error(`No preview row found for ${summaryText}`);
@@ -186,7 +186,7 @@ describe("NotesPreview", () => {
     expect(upToDate).not.toBeNull();
     expect(
       upToDate.closest(
-        "div.flashcards-import-wizard-modal__preview-row--imported",
+        "div.flashcards-note-transfer-wizard-modal__preview-row--imported",
       ),
     ).not.toBeNull();
     expect(boxes.filter((box) => box.hasAttribute("disabled"))).toHaveLength(4);

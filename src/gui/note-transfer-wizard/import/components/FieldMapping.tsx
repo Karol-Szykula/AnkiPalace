@@ -1,7 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type JSX } from "react";
 import { mergeClasses } from "src/gui/classes";
 import type { Anki } from "src/services/anki/anki";
-import { startAsyncLoad } from "src/gui/import-wizard/start-async-load";
+import { startAsyncLoad } from "src/gui/note-transfer-wizard/import/start-async-load";
 import type { DeckModel } from "src/services/notes/fields";
 import type {
   FieldMapping as FieldMap,
@@ -13,10 +13,10 @@ import { discoverDeckModels } from "src/services/notes/fields";
 import { builtInPackFor } from "src/services/notes/packs";
 import {
   commonWizardClasses,
-  fieldMappingClasses,
-} from "src/gui/import-wizard/classes";
-import { List } from "src/gui/import-wizard/list/List";
-import { ListRow } from "src/gui/import-wizard/list/ListRow";
+  transferFieldMappingClasses,
+} from "src/gui/note-transfer-wizard/import/classes";
+import { List } from "src/gui/note-transfer-wizard/import/list/List";
+import { ListRow } from "src/gui/note-transfer-wizard/import/list/ListRow";
 
 export interface FieldMappingProps {
   readonly anki: Anki;
@@ -92,11 +92,14 @@ export function FieldMapping({
     <div className={rootClassName}>
       <p>Map fields for deck &quot;{deckName}&quot;:</p>
       {models.map((model) => (
-        <div className={fieldMappingClasses.modelSection} key={model.modelName}>
+        <div
+          className={transferFieldMappingClasses.modelSection}
+          key={model.modelName}
+        >
           <h4>
             {model.modelName}
             {isKnownModel(model.modelName) && (
-              <span className={fieldMappingClasses.modelRecognized}>
+              <span className={transferFieldMappingClasses.modelRecognized}>
                 {" "}
                 Recognized
               </span>
@@ -112,7 +115,7 @@ export function FieldMapping({
                   <strong key="name">{field}</strong>,
                   model.sampleValues[field] ? (
                     <small
-                      className={fieldMappingClasses.fieldSample}
+                      className={transferFieldMappingClasses.fieldSample}
                       key="sample"
                     >
                       {model.sampleValues[field].slice(0, 60)}
@@ -142,7 +145,7 @@ export function FieldMapping({
                     ))}
                   </select>,
                 ]}
-                className={fieldMappingClasses.fieldRow}
+                className={transferFieldMappingClasses.fieldRow}
                 key={field}
               />
             ))}

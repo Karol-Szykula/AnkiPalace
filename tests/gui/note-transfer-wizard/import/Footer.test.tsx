@@ -9,7 +9,7 @@ import userEvent from "@testing-library/user-event";
 import {
   Footer,
   type FooterButton,
-} from "src/gui/import-wizard/components/Footer";
+} from "src/gui/note-transfer-wizard/import/components/Footer";
 
 function renderFooter(
   leftButtons: FooterButton[] = [{ label: "Cancel", onClick: jest.fn() }],

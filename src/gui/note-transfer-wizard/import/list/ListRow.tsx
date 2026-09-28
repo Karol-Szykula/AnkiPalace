@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { mergeClasses } from "src/gui/classes";
-import { listClasses } from "src/gui/import-wizard/listClasses";
+import { listClasses } from "src/gui/note-transfer-wizard/import/listClasses";
 
 export interface ListRowProps {
   readonly cells: ReactNode[];
