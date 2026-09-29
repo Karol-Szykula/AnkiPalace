@@ -220,7 +220,7 @@ describe("DeckSelection", () => {
 
     // then
     expect(radio).toHaveClass(
-      "flashcards-note-transfer-wizard-modal__scope-radio",
+      "ankipalace-note-transfer-wizard-modal__scope-radio",
     );
   });
 
@@ -235,12 +235,12 @@ describe("DeckSelection", () => {
     // then
     expect(radio).toBeDisabled();
     expect(
-      radio.closest("div.flashcards-note-transfer-wizard-modal__list-row"),
-    ).toHaveClass("flashcards-note-transfer-wizard-modal__scope-row--disabled");
+      radio.closest("div.ankipalace-note-transfer-wizard-modal__list-row"),
+    ).toHaveClass("ankipalace-note-transfer-wizard-modal__scope-row--disabled");
     expect(radio.closest("label")).toBeNull();
     expect(
       radio.closest(
-        "span.flashcards-note-transfer-wizard-modal__labeled-control--disabled",
+        "span.ankipalace-note-transfer-wizard-modal__labeled-control--disabled",
       ),
     ).not.toBeNull();
   });
@@ -268,7 +268,7 @@ describe("DeckSelection", () => {
     // then
     expect(radio.closest("label")).not.toBeNull();
     expect(radio.closest("label")).not.toHaveClass(
-      "flashcards-note-transfer-wizard-modal__labeled-control--disabled",
+      "ankipalace-note-transfer-wizard-modal__labeled-control--disabled",
     );
   });
 

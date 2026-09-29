@@ -14,7 +14,7 @@ export interface NotePack {
   packVersion: number;
 }
 
-const pluginFolderName = "better-flashcards";
+const pluginFolderName = "ankipalace";
 
 interface PackFolderListing {
   files: string[];

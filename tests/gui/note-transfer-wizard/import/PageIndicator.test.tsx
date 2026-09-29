@@ -44,7 +44,7 @@ describe("PageIndicator", () => {
 
     // then
     expect(title.parentElement).toHaveClass(
-      "flashcards-note-transfer-wizard-modal__page--active",
+      "ankipalace-note-transfer-wizard-modal__page--active",
     );
   });
 

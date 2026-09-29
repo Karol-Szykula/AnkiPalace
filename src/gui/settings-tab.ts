@@ -2,12 +2,12 @@ import type { App } from "obsidian";
 import { Notice, PluginSettingTab, Setting } from "obsidian";
 import { Anki } from "src/services/anki/anki";
 import { logger } from "src/services/logger";
-import type ObsidianFlashcard from "../../main";
+import type AnkiPalace from "../../main";
 
 export class SettingsTab extends PluginSettingTab {
-  plugin: ObsidianFlashcard;
+  plugin: AnkiPalace;
 
-  constructor(app: App, plugin: ObsidianFlashcard) {
+  constructor(app: App, plugin: AnkiPalace) {
     super(app, plugin);
     this.plugin = plugin;
   }

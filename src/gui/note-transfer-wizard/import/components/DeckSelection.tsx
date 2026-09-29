@@ -202,7 +202,7 @@ export function DeckSelection({
                   checked={deckName === selectedDeckName}
                   className={scopeSelectionClasses.scopeRadio}
                   disabled={isDisabled}
-                  name="flashcards-note-transfer-wizard-modal-scope"
+                  name="ankipalace-note-transfer-wizard-modal-scope"
                   onChange={() => onSelectDeckName(deckName)}
                   title={tooltip}
                   type="radio"
@@ -234,7 +234,7 @@ export function DeckSelection({
               key={deckName}
               onSelect={() => onSelectDeckName(deckName)}
               style={{
-                paddingLeft: `calc(${depth} * var(--flashcards-note-transfer-wizard-modal__row-indent) + 0.25rem)`,
+                paddingLeft: `calc(${depth} * var(--ankipalace-note-transfer-wizard-modal__row-indent) + 0.25rem)`,
               }}
             />
           );

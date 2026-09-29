@@ -136,7 +136,7 @@ describe("savePack and loadPack", () => {
     // given
     const app = App.createConfigured__({
       files: {
-        ".obsidian/plugins/better-flashcards/packs/My-Model.json":
+        ".obsidian/plugins/ankipalace/packs/My-Model.json":
           "not json{{{",
       },
     });

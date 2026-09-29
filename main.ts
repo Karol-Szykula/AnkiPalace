@@ -8,7 +8,7 @@ import { logger } from "src/services/logger";
 import { describeUnknown } from "src/services/anki/anki";
 import {
   clozeModelName,
-  flashcardsIcon,
+  ankipalaceIcon,
   noteFormLanguage,
   noticeTimeout,
 } from "src/conf/constants";
@@ -30,14 +30,14 @@ const syncCommandName = "Sync";
 const importDeckCommandName = "Import deck from Anki";
 const purgeLedgerCommandName = "Purge ledger";
 const insertNoteFormCommandName = "Insert note form";
-const newFlashcardFileCommandName = "New note file";
+const newNoteFileCommandName = "New note file";
 const newClozeNoteFileCommandName = "New cloze note file";
 
-export default class ObsidianFlashcard extends Plugin {
+export default class AnkiPalace extends Plugin {
   override settings!: ISettings;
 
   override async onload() {
-    addIcon("flashcards", flashcardsIcon);
+    addIcon("ankipalace", ankipalaceIcon);
 
     const anki = new Anki();
     this.settings = normalizeSettings(await this.loadData());
@@ -85,7 +85,7 @@ export default class ObsidianFlashcard extends Plugin {
     const exportToAnki = () => {
       void this.runExport();
     };
-    this.addRibbonIcon("flashcards", exportToAnkiCommandName, exportToAnki);
+    this.addRibbonIcon("ankipalace", exportToAnkiCommandName, exportToAnki);
     this.addCommand({
       id: "export-to-anki",
       name: exportToAnkiCommandName,
@@ -194,7 +194,7 @@ export default class ObsidianFlashcard extends Plugin {
     });
     this.addCommand({
       id: "new-note-form-file",
-      name: newFlashcardFileCommandName,
+      name: newNoteFileCommandName,
       callback: () => {
         void createNoteFormFile(this.app);
       },

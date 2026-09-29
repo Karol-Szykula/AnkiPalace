@@ -20,13 +20,13 @@ describe("List sticky header", () => {
 
     // when
     const header = document.querySelector(
-      ".flashcards-note-transfer-wizard-modal__list-header",
+      ".ankipalace-note-transfer-wizard-modal__list-header",
     );
 
     // then - header element exists with correct class; sticky positioning is defined in CSS
     expect(header).toBeInTheDocument();
     expect(header).toHaveClass(
-      "flashcards-note-transfer-wizard-modal__list-header",
+      "ankipalace-note-transfer-wizard-modal__list-header",
     );
   });
 
