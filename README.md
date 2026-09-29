@@ -1,4 +1,4 @@
-# Better Flashcards
+# AnkiPalace
 
 ![logo](logo.png)
 Anki integration for [Obsidian](https://obsidian.md/).
@@ -44,12 +44,12 @@ The wiki explains in detail [how to use it](https://github.com/reuseman/flashcar
 
 ### From the community plugin store
 
-1. [Install](obsidian://show-plugin?id=better-flashcards) this plugin on Obsidian:
+1. [Install](obsidian://show-plugin?id=ankipalace) this plugin on Obsidian:
 
    - Open Settings > Community plugins
    - Make sure Safe mode is off
    - Click Browse community plugins
-   - Search for "**Better Flashcards**"
+   - Search for "**AnkiPalace**"
    - Click Install
    - Once installed, close the community plugins window and activate the newly installed plugin
 
@@ -65,10 +65,10 @@ To build and install from this repository, see the [Build and release guide](doc
 
 ## Privacy
 
-This plugin only reads vault files when you explicitly run a generate command (current file or all files in vault). It uses file paths locally to find flashcard syntax and sends card content to Anki on your machine via AnkiConnect. No data is sent to external servers. Use the **Ignored directories** setting to exclude folders from vault-wide generation.
+This plugin only reads vault files when you explicitly run a generate command (current file or all files in vault). It uses file paths locally to find card syntax and sends card content to Anki on your machine via AnkiConnect. No data is sent to external servers. Use the **Ignored directories** setting to exclude folders from vault-wide generation.
 
 ## Contributing
 Contributions via bug reports, bug fixes, are welcome. If you have ideas about features to be implemented, please open an issue so we can discuss the best way to implement it. For more details check [Contributing.md](docs/CONTRIBUTING.md)
 
 ## Support
-If this plugin is useful to you, consider starring the [repository](https://github.com/mihirpatel1112/better-flashcards) or [sponsoring on GitHub](https://github.com/sponsors/mihirpatel1112).
+If this plugin is useful to you, consider starring the [repository](https://github.com/Karol-Szykula/better-flashcards) or [sponsoring on GitHub](https://github.com/sponsors/mihirpatel1112).

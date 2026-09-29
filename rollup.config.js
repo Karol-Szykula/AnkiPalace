@@ -23,7 +23,7 @@ const getTypescriptPlugin = (outDir) =>
 export default {
   input: "main.dev.ts",
   output: {
-    dir: "docs/test-vault/.obsidian/plugins/better-flashcards/",
+    dir: "docs/test-vault/.obsidian/plugins/ankipalace/",
     entryFileNames: "main.js",
     sourcemap: "inline",
     format: "cjs",
@@ -31,16 +31,10 @@ export default {
   },
   external: ["obsidian"],
   plugins: [
-    getTypescriptPlugin("docs/test-vault/.obsidian/plugins/better-flashcards/"),
+    getTypescriptPlugin("docs/test-vault/.obsidian/plugins/ankipalace/"),
     nodeResolve({ browser: true }),
     commonjs(),
-    copyFile(
-      "manifest.json",
-      "docs/test-vault/.obsidian/plugins/better-flashcards/",
-    ),
-    copyFile(
-      "styles.css",
-      "docs/test-vault/.obsidian/plugins/better-flashcards/",
-    ),
+    copyFile("manifest.json", "docs/test-vault/.obsidian/plugins/ankipalace/"),
+    copyFile("styles.css", "docs/test-vault/.obsidian/plugins/ankipalace/"),
   ],
 };
