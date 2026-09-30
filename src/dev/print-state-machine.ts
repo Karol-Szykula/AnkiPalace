@@ -27,6 +27,7 @@ flowchart TB
     MERMAID_LC["noteLifecycleMermaid()"]
     MERMAID_DT["syncDecisionTableMermaid()"]
     MD_DT["syncDecisionTableMarkdown()"]
+    MD_DT_CMD["syncDecisionTableMarkdownCommandCentric()"]
     DOC["docs/state-machine.md"]
   end
 
@@ -42,10 +43,12 @@ flowchart TB
   LT --> MERMAID_LC
   DT --> MERMAID_DT
   DT --> MD_DT
+  DT --> MD_DT_CMD
   DT --> DECIDE
   MERMAID_LC --> DOC
   MERMAID_DT --> DOC
   MD_DT --> DOC
+  MD_DT_CMD --> DOC
   XSTATE --> TRANSIT
   CLASSIFY --> DECIDE
   DECIDE --> TRANSIT
@@ -56,7 +59,7 @@ flowchart TB
   classDef run fill:#e8eaf6,stroke:#283593,stroke-width:2px,color:#1a237e;
   classDef doc fill:#fce4ec,stroke:#ad1457,stroke-width:2px,color:#880e4f;
   class LT,DT src;
-  class XSTATE,MERMAID_LC,MERMAID_DT,MD_DT,DOC gen;
+  class XSTATE,MERMAID_LC,MERMAID_DT,MD_DT,MD_DT_CMD,DOC gen;
   class CLASSIFY,DECIDE,TRANSIT,LEDGER run;
 \`\`\`
 
@@ -111,6 +114,7 @@ flowchart TB
     MERMAID_LC["noteLifecycleMermaid()"]
     MERMAID_DT["syncDecisionTableMermaid()"]
     MD_TABLE["syncDecisionTableMarkdown()"]
+    MD_TABLE_CMD["syncDecisionTableMarkdownCommandCentric()"]
     DOC["docs/state-machine.md"]
   end
 
@@ -126,8 +130,11 @@ flowchart TB
   LT --> MERMAID_LC
   DT --> MERMAID_DT
   DT --> MD_TABLE
+  DT --> MD_TABLE_CMD
   MERMAID_LC --> DOC
   MERMAID_DT --> DOC
+  MD_TABLE --> DOC
+  MD_TABLE_CMD --> DOC
   XSTATE --> TRANSIT
 
   CLASSIFY --> DECIDE
@@ -139,7 +146,7 @@ flowchart TB
   classDef run fill:#e8eaf6,stroke:#283593,stroke-width:2px,color:#1a237e;
   classDef doc fill:#fce4ec,stroke:#ad1457,stroke-width:2px,color:#880e4f;
   class LT,DT src;
-  class XSTATE,MERMAID_DT,MD_TABLE,DOC gen;
+  class XSTATE,MERMAID_DT,MD_TABLE,MD_TABLE_CMD,DOC gen;
   class CLASSIFY,DECIDE,TRANSIT,LEDGER run;
 \`\`\`
 
@@ -262,6 +269,7 @@ For the 3-present case: \`vaultDirty = block.hash !== record.lastHash\`, \`ankiD
 | State Machine Mermaid | \`noteLifecycleMermaid()\` | \`lifecycleTransitions\` | \`lifecycle.test.ts:252-263\` |
 | Decision Table Mermaid | \`syncDecisionTableMermaid()\` | \`decisions\` | \`decision-table.test.ts\` (new) |
 | Decision Table Markdown | \`syncDecisionTableMarkdown()\` | \`decisions\` | \`decision-table.test.ts:268-278\` |
+| Decision Table Markdown (Command-Centric) | \`syncDecisionTableMarkdownCommandCentric()\` | \`decisions\` | \`decision-table.test.ts:296-302\` |
 
 Run \`pnpm run doc:state-machine\` to regenerate this document.
 Run \`pnpm run test\` to verify anti-drift.
