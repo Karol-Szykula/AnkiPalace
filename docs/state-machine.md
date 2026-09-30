@@ -6,13 +6,15 @@
 ## 1. Dependency Chain (What Derives From What)
 
 ```mermaid
-flowchart LR
+flowchart TB
   subgraph SOURCE["Source of Truth (Manual)"]
+    direction TB
     LT["lifecycleTransitions<br/>(lifecycle.ts:47-79)"]
     DT["decisions[cmd][status]<br/>(decision-table.ts:33-255)"]
   end
 
   subgraph GEN["Derived / Generated"]
+    direction TB
     XSTATE["xstate machine<br/>(machineStates)"]
     MERMAID_LC["noteLifecycleMermaid()"]
     MERMAID_DT["syncDecisionTableMermaid()"]
@@ -21,6 +23,7 @@ flowchart LR
   end
 
   subgraph RUNTIME["Runtime"]
+    direction TB
     CLASSIFY["classifyNoteLifecycle"]
     DECIDE["decisionActFor"]
     TRANSIT["transitionNoteLifecycle"]
@@ -60,6 +63,8 @@ This is the **single source of truth** for legal state transitions. The xstate m
 
 ```mermaid
 stateDiagram-v2
+  direction TB
+  [*] --> ankiOnly_neverImported
   ankiOnly_neverImported["ankiOnly.neverImported"]
   ankiOnly_fileDeleted["ankiOnly.fileDeleted"]
   synced_clean["synced.clean"]
@@ -100,15 +105,16 @@ stateDiagram-v2
 This is the **second independent authority**. It defines what each command (import/export/sync) does in each state — which event to emit, whether force changes it, who owns the decision, and why.
 
 ```mermaid
-flowchart LR
-  subgraph Commands
+flowchart TB
+  rankdir TB
+  subgraph COMMANDS[Commands]
     direction TB
     Import["Import (Anki wins)"]
     Export["Export (Obsidian wins)"]
     Sync["Sync (no force)"]
   end
 
-  subgraph States
+  subgraph STATES[States]
     direction TB
     ankiOnly_neverImported["ankiOnly.neverImported"]
     ankiOnly_fileDeleted["ankiOnly.fileDeleted"]
@@ -252,13 +258,15 @@ flowchart LR
 ## 3. How They Relate — Dependency Graph
 
 ```mermaid
-flowchart LR
+flowchart TB
   subgraph SOURCE["Source Tables (Manual)"]
+    direction TB
     LT["lifecycleTransitions<br/>(11 states × events)"]
     DT["decisions[cmd][status]<br/>(3 cmds × 11 states)"]
   end
 
   subgraph GEN["Derived (Generated)"]
+    direction TB
     XSTATE["xstate machine<br/>via machineStates"]
     MERMAID_LC["noteLifecycleMermaid()"]
     MERMAID_DT["syncDecisionTableMermaid()"]
@@ -267,6 +275,7 @@ flowchart LR
   end
 
   subgraph RUNTIME["Runtime Entry Points"]
+    direction TB
     CLASSIFY["classifyNoteLifecycle"]
     DECIDE["decisionActFor"]
     TRANSIT["transitionNoteLifecycle"]
@@ -299,7 +308,7 @@ flowchart LR
 Every sync operation follows this chain:
 
 ```mermaid
-flowchart TD
+flowchart TB
   A["classifyNoteLifecycle"] -->|returns NoteLifecycleStatus| B
   B["decisionActFor"] -->|returns NoteLifecycleEvent or OUT_OF_SCOPE| C
   C -->|if in scope| D["transitionNoteLifecycle"]
@@ -342,11 +351,13 @@ flowchart TD
 ## 5. The Two Tables — Relationship at Runtime
 
 ```mermaid
-flowchart LR
+flowchart TB
   subgraph SRC1["Source 1: Machine Topology"]
+    direction TB
     LT["lifecycleTransitions"]
   end
   subgraph SRC2["Source 2: Command Policy"]
+    direction TB
     DT["decisions"]
   end
 

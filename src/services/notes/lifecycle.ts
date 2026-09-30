@@ -320,7 +320,11 @@ export function notePreviewStatusFor(
  */
 export function noteLifecycleMermaid(): string {
   const idOf = (status: string): string => status.replace(".", "_");
-  const lines = ["stateDiagram-v2"];
+  const lines = [
+    "stateDiagram-v2",
+    "  direction TB",
+    "  [*] --> ankiOnly_neverImported",
+  ];
   for (const status of NOTE_LIFECYCLE_STATUSES) {
     lines.push(`  ${idOf(status)}["${status}"]`);
   }

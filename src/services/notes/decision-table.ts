@@ -356,7 +356,7 @@ function rowLabel(row: SyncDecisionRow): string {
 }
 
 function buildCommandSubgraph(lines: string[]): void {
-  lines.push("  subgraph Commands");
+  lines.push("  subgraph COMMANDS[Commands]");
   lines.push("    direction TB");
   lines.push('    Import["Import (Anki wins)"]');
   lines.push('    Export["Export (Obsidian wins)"]');
@@ -366,7 +366,7 @@ function buildCommandSubgraph(lines: string[]): void {
 }
 
 function buildStatesSubgraph(lines: string[]): void {
-  lines.push("  subgraph States");
+  lines.push("  subgraph STATES[States]");
   lines.push("    direction TB");
   for (const status of NOTE_LIFECYCLE_STATUSES) {
     lines.push(`    ${statusId(status)}["${status}"]`);
@@ -400,7 +400,8 @@ function buildClassDefs(lines: string[]): void {
 }
 
 export function syncDecisionTableMermaid(): string {
-  const lines = ["flowchart LR"];
+  const lines = ["flowchart TB"];
+  lines.push("  rankdir TB");
   buildCommandSubgraph(lines);
   buildStatesSubgraph(lines);
   buildCommandEdges(lines);
