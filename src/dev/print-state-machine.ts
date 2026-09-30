@@ -38,6 +38,7 @@ flowchart LR
   LT --> MERMAID_LC
   DT --> MERMAID_DT
   DT --> MD_DT
+  DT --> DECIDE
   MERMAID_LC --> DOC
   MERMAID_DT --> DOC
   MD_DT --> DOC
