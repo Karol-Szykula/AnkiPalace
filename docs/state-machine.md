@@ -43,10 +43,10 @@ flowchart TB
   DECIDE --> TRANSIT
   TRANSIT --> LEDGER
 
-  classDef src fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
-  classDef gen fill:#fff3e0,stroke:#ef6c00,stroke-width:2px;
-  classDef run fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
-  classDef doc fill:#fce4ec,stroke:#c2185b,stroke-width:2px;
+  classDef src fill:#e8f5e9,stroke:#33691e,stroke-width:2px,color:#1b5e20;
+  classDef gen fill:#fff8e1,stroke:#f57c00,stroke-width:2px,color:#e65100;
+  classDef run fill:#e8eaf6,stroke:#283593,stroke-width:2px,color:#1a237e;
+  classDef doc fill:#fce4ec,stroke:#ad1457,stroke-width:2px,color:#880e4f;
   class LT,DT src;
   class XSTATE,MERMAID_LC,MERMAID_DT,MD_DT,DOC gen;
   class CLASSIFY,DECIDE,TRANSIT,LEDGER run;
@@ -168,8 +168,8 @@ flowchart TB
   Sync -->|def:—\nforce:—\nkind:missing\nowner:sync| vaultOnly_ankiDeleted
   Sync -->|def:—\nforce:—\nkind:missing\nowner:purge| orphaned
 
-  classDef cmd fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
-  classDef state fill:#f3e5f5,stroke:#4a148c,stroke-width:1px;
+  classDef cmd fill:#e8eaf6,stroke:#283593,stroke-width:2px,color:#1a237e;
+  classDef state fill:#fce4ec,stroke:#ad1457,stroke-width:1px,color:#880e4f;
   class Import,Export,Sync cmd;
   class ankiOnly_neverImported state;
   class ankiOnly_fileDeleted state;
@@ -293,10 +293,10 @@ flowchart TB
   DECIDE --> TRANSIT
   TRANSIT --> LEDGER
 
-  classDef src fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
-  classDef gen fill:#fff3e0,stroke:#ef6c00,stroke-width:2px;
-  classDef run fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
-  classDef doc fill:#fce4ec,stroke:#c2185b,stroke-width:2px;
+  classDef src fill:#e8f5e9,stroke:#33691e,stroke-width:2px,color:#1b5e20;
+  classDef gen fill:#fff8e1,stroke:#f57c00,stroke-width:2px,color:#e65100;
+  classDef run fill:#e8eaf6,stroke:#283593,stroke-width:2px,color:#1a237e;
+  classDef doc fill:#fce4ec,stroke:#ad1457,stroke-width:2px,color:#880e4f;
   class LT,DT src;
   class XSTATE,MERMAID_DT,MD_TABLE,DOC gen;
   class CLASSIFY,DECIDE,TRANSIT,LEDGER run;
@@ -316,10 +316,10 @@ flowchart TB
   F --> G["update ledger"]
   C -.->|if OUT_OF_SCOPE| H["no state change, counted in report"]
 
-  classDef entry fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
-  classDef decision fill:#fff3e0,stroke:#ef6c00,stroke-width:2px;
-  classDef transit fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
-  classDef ledger fill:#fce4ec,stroke:#c2185b,stroke-width:2px;
+  classDef entry fill:#e8eaf6,stroke:#283593,stroke-width:2px,color:#1a237e;
+  classDef decision fill:#fff8e1,stroke:#f57c00,stroke-width:2px,color:#e65100;
+  classDef transit fill:#e8f5e9,stroke:#33691e,stroke-width:2px,color:#1b5e20;
+  classDef ledger fill:#fce4ec,stroke:#ad1457,stroke-width:2px,color:#880e4f;
   class A entry;
   class B decision;
   class C,D transit;
@@ -369,9 +369,9 @@ flowchart TB
   CLASSIFY["classifyNoteLifecycle"] --> DECIDE
   TRANSIT --> LEDGER["syncedCleanRecord"]
 
-  classDef src fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
-  classDef derived fill:#fff3e0,stroke:#ef6c00,stroke-width:2px;
-  classDef runtime fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+  classDef src fill:#e8f5e9,stroke:#33691e,stroke-width:2px,color:#1b5e20;
+  classDef derived fill:#fff8e1,stroke:#f57c00,stroke-width:2px,color:#e65100;
+  classDef runtime fill:#e8eaf6,stroke:#283593,stroke-width:2px,color:#1a237e;
   class LT,DT src;
   class DECIDE derived;
   class CLASSIFY,DECIDE,TRANSIT runtime;

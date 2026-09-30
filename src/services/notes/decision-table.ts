@@ -391,8 +391,12 @@ function buildCommandEdges(lines: string[]): void {
 }
 
 function buildClassDefs(lines: string[]): void {
-  lines.push("  classDef cmd fill:#e1f5fe,stroke:#01579b,stroke-width:2px;");
-  lines.push("  classDef state fill:#f3e5f5,stroke:#4a148c,stroke-width:1px;");
+  lines.push(
+    "  classDef cmd fill:#e8eaf6,stroke:#283593,stroke-width:2px,color:#1a237e;",
+  );
+  lines.push(
+    "  classDef state fill:#fce4ec,stroke:#ad1457,stroke-width:1px,color:#880e4f;",
+  );
   lines.push("  class Import,Export,Sync cmd;");
   for (const status of NOTE_LIFECYCLE_STATUSES) {
     lines.push(`  class ${statusId(status)} state;`);
