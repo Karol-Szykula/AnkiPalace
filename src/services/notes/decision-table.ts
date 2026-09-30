@@ -401,7 +401,6 @@ function buildClassDefs(lines: string[]): void {
 
 export function syncDecisionTableMermaid(): string {
   const lines = ["flowchart TB"];
-  lines.push("  rankdir TB");
   buildCommandSubgraph(lines);
   buildStatesSubgraph(lines);
   buildCommandEdges(lines);

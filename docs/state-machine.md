@@ -106,7 +106,6 @@ This is the **second independent authority**. It defines what each command (impo
 
 ```mermaid
 flowchart TB
-  rankdir TB
   subgraph COMMANDS[Commands]
     direction TB
     Import["Import (Anki wins)"]
