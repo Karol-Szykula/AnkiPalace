@@ -7,27 +7,24 @@
 
 ```mermaid
 flowchart LR
-  subgraph "Source of Truth (Manual)"
-    LT["lifecycleTransitions
-(lifecycle.ts:47-79)"]
-    DT["decisions[cmd][status]
-(decision-table.ts:33-255)"]
+  subgraph SOURCE["Source of Truth (Manual)"]
+    LT["lifecycleTransitions<br/>(lifecycle.ts:47-79)"]
+    DT["decisions[cmd][status]<br/>(decision-table.ts:33-255)"]
   end
 
-  subgraph "Derived / Generated"
-    XSTATE["xstate machine
-(machineStates())"]
+  subgraph GEN["Derived / Generated"]
+    XSTATE["xstate machine<br/>(machineStates)"]
     MERMAID_LC["noteLifecycleMermaid()"]
     MERMAID_DT["syncDecisionTableMermaid()"]
     MD_DT["syncDecisionTableMarkdown()"]
     DOC["docs/state-machine.md"]
   end
 
-  subgraph "Runtime"
-    CLASSIFY["classifyNoteLifecycle()"]
-    DECIDE["decisionActFor()"]
-    TRANSIT["transitionNoteLifecycle()"]
-    LEDGER["syncedCleanRecord()"]
+  subgraph RUNTIME["Runtime"]
+    CLASSIFY["classifyNoteLifecycle"]
+    DECIDE["decisionActFor"]
+    TRANSIT["transitionNoteLifecycle"]
+    LEDGER["syncedCleanRecord"]
   end
 
   LT --> XSTATE
@@ -235,27 +232,24 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  subgraph "Source Tables (Manual)"
-    LT["lifecycleTransitions
-(11 states × events)"]
-    DT["decisions[cmd][status]
-(3 cmds × 11 states)"]
+  subgraph SOURCE["Source Tables (Manual)"]
+    LT["lifecycleTransitions<br/>(11 states × events)"]
+    DT["decisions[cmd][status]<br/>(3 cmds × 11 states)"]
   end
 
-  subgraph "Derived (Generated)"
-    XSTATE["xstate machine
-via machineStates()"]
+  subgraph GEN["Derived (Generated)"]
+    XSTATE["xstate machine<br/>via machineStates"]
     MERMAID_LC["noteLifecycleMermaid()"]
     MERMAID_DT["syncDecisionTableMermaid()"]
     MD_TABLE["syncDecisionTableMarkdown()"]
     DOC["docs/state-machine.md"]
   end
 
-  subgraph "Runtime Entry Points"
-    CLASSIFY["classifyNoteLifecycle(anki, block, record)"]
-    DECIDE["decisionActFor(cmd, state, forced?)"]
-    TRANSIT["transitionNoteLifecycle(state, event)"]
-    LEDGER["syncedCleanRecord(hash, mod)"]
+  subgraph RUNTIME["Runtime Entry Points"]
+    CLASSIFY["classifyNoteLifecycle"]
+    DECIDE["decisionActFor"]
+    TRANSIT["transitionNoteLifecycle"]
+    LEDGER["syncedCleanRecord"]
   end
 
   LT --> XSTATE
@@ -285,13 +279,13 @@ Every sync operation follows this chain:
 
 ```mermaid
 flowchart TD
-  A[classifyNoteLifecycle(anki?, block?, record?)] -->|returns NoteLifecycleStatus| B
-  B[decisionActFor(command, status, forced?)] -->|returns NoteLifecycleEvent or OUT_OF_SCOPE| C
-  C -->|if in scope| D[transitionNoteLifecycle(status, event)]
-  D -->|validated by xstate| E[nextStatus]
-  E --> F[syncedCleanRecord(hash, mod)]
-  F --> G[update ledger]
-  C -.->|if OUT_OF_SCOPE| H[no state change, counted in report]
+  A["classifyNoteLifecycle"] -->|returns NoteLifecycleStatus| B
+  B["decisionActFor"] -->|returns NoteLifecycleEvent or OUT_OF_SCOPE| C
+  C -->|if in scope| D["transitionNoteLifecycle"]
+  D -->|validated by xstate| E["nextStatus"]
+  E --> F["syncedCleanRecord"]
+  F --> G["update ledger"]
+  C -.->|if OUT_OF_SCOPE| H["no state change, counted in report"]
 
   classDef entry fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
   classDef decision fill:#fff3e0,stroke:#ef6c00,stroke-width:2px;
@@ -328,21 +322,21 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-  subgraph "Source 1: Machine Topology"
-    LT[lifecycleTransitions]
+  subgraph SRC1["Source 1: Machine Topology"]
+    LT["lifecycleTransitions"]
   end
-  subgraph "Source 2: Command Policy"
-    DT[decisions[cmd][status]]
+  subgraph SRC2["Source 2: Command Policy"]
+    DT["decisions"]
   end
 
-  LT --> XSTATE[xstate machine]
-  XSTATE --> TRANSIT[transitionNoteLifecycle]
+  LT --> XSTATE["xstate machine"]
+  XSTATE --> TRANSIT["transitionNoteLifecycle"]
 
-  DT --> DECIDE[decisionActFor]
+  DT --> DECIDE["decisionActFor"]
   DECIDE -->|event| TRANSIT
 
-  CLASSIFY[classifyNoteLifecycle] --> DECIDE
-  TRANSIT --> LEDGER[syncedCleanRecord]
+  CLASSIFY["classifyNoteLifecycle"] --> DECIDE
+  TRANSIT --> LEDGER["syncedCleanRecord"]
 
   classDef src fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
   classDef derived fill:#fff3e0,stroke:#ef6c00,stroke-width:2px;

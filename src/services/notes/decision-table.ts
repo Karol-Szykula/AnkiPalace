@@ -322,7 +322,8 @@ function cmdNode(command: string): string {
 function rowLabel(row: SyncDecisionRow): string {
   const defaultAct = row.act === OUT_OF_SCOPE ? "—" : row.act;
   const forcedAct = row.forcedAct ?? "—";
-  return `def:${defaultAct}\\nforce:${forcedAct}\\nkind:${row.kind}\\nowner:${row.owner}`;
+  const label = `def:${defaultAct}\\nforce:${forcedAct}\\nkind:${row.kind}\\nowner:${row.owner}`;
+  return label.replace(/\[/g, "&#91;").replace(/\]/g, "&#93;");
 }
 
 function buildCommandSubgraph(lines: string[]): void {
