@@ -311,8 +311,21 @@ export function syncDecisionTableMarkdown(): string {
   return sections.join("\n\n");
 }
 
-export function syncDecisionTableMermaid(): string {
-  const lines = ["flowchart LR"];
+function statusId(status: string): string {
+  return status.replace(".", "_");
+}
+
+function cmdNode(command: string): string {
+  return command.charAt(0).toUpperCase() + command.slice(1);
+}
+
+function rowLabel(row: SyncDecisionRow): string {
+  const defaultAct = row.act === OUT_OF_SCOPE ? "—" : row.act;
+  const forcedAct = row.forcedAct ?? "—";
+  return `def:${defaultAct}\\nforce:${forcedAct}\\nkind:${row.kind}\\nowner:${row.owner}`;
+}
+
+function buildCommandSubgraph(lines: string[]): void {
   lines.push("  subgraph Commands");
   lines.push("    direction TB");
   lines.push('    Import["Import (Anki wins)"]');
@@ -320,36 +333,47 @@ export function syncDecisionTableMermaid(): string {
   lines.push('    Sync["Sync (no force)"]');
   lines.push("  end");
   lines.push("");
+}
+
+function buildStatesSubgraph(lines: string[]): void {
   lines.push("  subgraph States");
   lines.push("    direction TB");
   for (const status of NOTE_LIFECYCLE_STATUSES) {
-    const id = status.replace(".", "_");
-    lines.push(`    ${id}["${status}"]`);
+    lines.push(`    ${statusId(status)}["${status}"]`);
   }
   lines.push("  end");
   lines.push("");
+}
+
+function buildCommandEdges(lines: string[]): void {
   for (const command of SYNC_COMMANDS) {
-    const cmdNode = command.charAt(0).toUpperCase() + command.slice(1);
+    const node = cmdNode(command);
     for (const [status, row] of Object.entries(decisions[command])) {
-      const statusId = status.replace(".", "_");
-      const defaultAct = row.act === OUT_OF_SCOPE ? "—" : row.act;
-      const forcedAct = row.forcedAct ?? "—";
-      const kind = row.kind;
-      const owner = row.owner;
-      const label = `def:${defaultAct}\\nforce:${forcedAct}\\nkind:${kind}\\nowner:${owner}`;
-      lines.push(`  ${cmdNode} -->|${label}| ${statusId}`);
+      const sid = statusId(status);
+      const label = rowLabel(row);
+      lines.push(`  ${node} -->|${label}| ${sid}`);
       if (row.forcedAct !== undefined) {
-        lines.push(`  ${statusId} -.->|forced: ${row.forcedAct}| ${cmdNode}`);
+        lines.push(`  ${sid} -.->|forced: ${row.forcedAct}| ${node}`);
       }
     }
   }
   lines.push("");
+}
+
+function buildClassDefs(lines: string[]): void {
   lines.push("  classDef cmd fill:#e1f5fe,stroke:#01579b,stroke-width:2px;");
   lines.push("  classDef state fill:#f3e5f5,stroke:#4a148c,stroke-width:1px;");
   lines.push("  class Import,Export,Sync cmd;");
   for (const status of NOTE_LIFECYCLE_STATUSES) {
-    const id = status.replace(".", "_");
-    lines.push(`  class ${id} state;`);
+    lines.push(`  class ${statusId(status)} state;`);
   }
+}
+
+export function syncDecisionTableMermaid(): string {
+  const lines = ["flowchart LR"];
+  buildCommandSubgraph(lines);
+  buildStatesSubgraph(lines);
+  buildCommandEdges(lines);
+  buildClassDefs(lines);
   return lines.join("\n");
 }
