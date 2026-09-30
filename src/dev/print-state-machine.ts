@@ -2,6 +2,7 @@ import { writeFileSync } from "fs";
 import { noteLifecycleMermaid } from "src/services/notes/lifecycle";
 import {
   syncDecisionTableMarkdown,
+  syncDecisionTableMarkdownCommandCentric,
   syncDecisionTableMermaid,
 } from "src/services/notes/decision-table";
 
@@ -80,9 +81,16 @@ This is the **second independent authority**. It defines what each command (impo
 ${syncDecisionTableMermaid()}
 \`\`\`
 
-#### Decision Table (Markdown)
+#### Decision Table (Markdown) — State-Centric (Transposed)
 
 ${syncDecisionTableMarkdown()}
+
+<details>
+<summary>Command-Centric Tables (per command)</summary>
+
+${syncDecisionTableMarkdownCommandCentric()}
+
+</details>
 
 ## 3. How They Relate — Dependency Graph
 

@@ -12,6 +12,7 @@ import {
   SYNC_COMMANDS,
   syncDecisionFor,
   syncDecisionTableMarkdown,
+  syncDecisionTableMarkdownCommandCentric,
   syncDecisionTableMermaid,
   type OutcomeKind,
   type SyncCommand,
@@ -289,5 +290,18 @@ describe("syncDecisionTableMermaid", () => {
 
     // then
     expect(doc).toContain(`\`\`\`mermaid\n${mermaid}\n\`\`\``);
+  });
+});
+
+describe("syncDecisionTableMarkdownCommandCentric", () => {
+  test("given the state machine doc when generated then it contains the command-centric tables", () => {
+    // given
+    const doc = readFileSync("docs/state-machine.md", "utf8");
+
+    // when
+    const markdown = syncDecisionTableMarkdownCommandCentric();
+
+    // then
+    expect(doc).toContain(markdown);
   });
 });

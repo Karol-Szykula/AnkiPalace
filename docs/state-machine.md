@@ -179,7 +179,7 @@ flowchart LR
   class orphaned state;
 ```
 
-#### Decision Table (Markdown)
+#### Decision Table (Markdown) — State-Centric (Transposed)
 
 | State | Import (Anki wins) | Export (Obsidian wins) | Sync (no force) |
 |-------|--------------------|------------------------|-----------------|
@@ -194,6 +194,60 @@ flowchart LR
 | `vaultOnly.unenrolled` | `ENROLL`<br/>quiet · wizard<br/>Has an id but no record: enrols it, writes nothing. | `ENROLL`<br/>quiet · wizard<br/>Has an id but no record: enrols it, rewrites the same file. | `—`<br/>quiet · wizard<br/>Enrolling is the wizards' job. |
 | `vaultOnly.ankiDeleted` | `—` / `EXPORT` (force)<br/>missing · sync<br/>**Force:** EXPORT (Obsidian wins)<br/>Gone from Anki: Sync applies the deletion. Forced: Obsidian wins: re-creates it in Anki. | `—`<br/>missing · sync<br/>Gone from Anki: Sync deletes the file. | `—`<br/>missing · sync<br/>Gone from Anki: the purge path handles it, DELETE_FILE arrives with OBSID-20. |
 | `orphaned` | `—`<br/>missing · purge<br/>Only a stale record left: Purge ledger forgets it. | `—`<br/>missing · purge<br/>Only a stale record left: Purge ledger forgets it. | `—`<br/>missing · purge<br/>Only a stale record left: Purge ledger forgets it. |
+
+<details>
+<summary>Command-Centric Tables (per command)</summary>
+
+### export (force: Obsidian wins)
+
+| state | kind | default | forced | owner | why |
+| --- | --- | --- | --- | --- | --- |
+| `ankiOnly.neverImported` | `create` | `—` | `—` | `import` | Anki only: the import wizard brings it in. |
+| `ankiOnly.fileDeleted` | `missing` | `—` | `—` | `sync` | File gone: Sync decides, nothing to push. |
+| `synced.clean` | `quiet` | `CHECK` | `—` | `sync` | Both sides match: nothing to write. |
+| `synced.ankiNewer` | `skip` | `—` | `FORCE_PUSH` | `sync` | Newer in Anki: skipped, use Sync. Forced: Obsidian wins: overwrites Anki. |
+| `synced.vaultNewer` | `overwrite` | `PUSH` | `—` | `export` | Newer in Obsidian: pushes to Anki. |
+| `synced.diverged` | `conflict` | `—` | `FORCE_PUSH` | `sync` | Edited in both: skipped, use Sync. Forced: Obsidian wins: overwrites Anki. |
+| `linked.unenrolled` | `quiet` | `ENROLL` | `—` | `wizard` | Has an id but no record: enrols it, writes nothing. |
+| `vaultOnly.unexported` | `create` | `EXPORT` | `—` | `export` | Vault only: creates the Anki note, writes the id back. |
+| `vaultOnly.unenrolled` | `quiet` | `ENROLL` | `—` | `wizard` | Has an id but no record: enrols it, writes nothing. |
+| `vaultOnly.ankiDeleted` | `missing` | `—` | `EXPORT` | `sync` | Gone from Anki: Sync applies the deletion. Forced: Obsidian wins: re-creates it in Anki. |
+| `orphaned` | `missing` | `—` | `—` | `purge` | Only a stale record left: Purge ledger forgets it. |
+
+### import (force: Anki wins)
+
+| state | kind | default | forced | owner | why |
+| --- | --- | --- | --- | --- | --- |
+| `ankiOnly.neverImported` | `create` | `IMPORT` | `—` | `import` | Anki only: creates the file. |
+| `ankiOnly.fileDeleted` | `missing` | `—` | `RESURRECT` | `sync` | File gone: Sync decides, Anki wins re-creates it. Forced: Anki wins: re-creates the file you deleted. |
+| `synced.clean` | `quiet` | `CHECK` | `—` | `sync` | Both sides match: rewrites nothing. Forced: Anki wins: rewrites the same content. |
+| `synced.ankiNewer` | `overwrite` | `PULL` | `—` | `sync` | Newer in Anki: overwrites your file. |
+| `synced.vaultNewer` | `skip` | `—` | `FORCE_PULL` | `sync` | Newer in Obsidian: skipped, use Sync. Forced: Anki wins: overwrites your newer edits. |
+| `synced.diverged` | `conflict` | `—` | `FORCE_PULL` | `sync` | Edited in both: newest wins on Sync. Forced: Anki wins: overwrites your newer edits. |
+| `linked.unenrolled` | `quiet` | `ENROLL` | `—` | `wizard` | Has an id but no record: enrols it, rewrites the same file. |
+| `vaultOnly.unexported` | `create` | `—` | `—` | `export` | Vault only: the export wizard creates it. |
+| `vaultOnly.unenrolled` | `quiet` | `ENROLL` | `—` | `wizard` | Has an id but no record: enrols it, rewrites the same file. |
+| `vaultOnly.ankiDeleted` | `missing` | `—` | `—` | `sync` | Gone from Anki: Sync deletes the file. |
+| `orphaned` | `missing` | `—` | `—` | `purge` | Only a stale record left: Purge ledger forgets it. |
+
+### sync (force: no force)
+
+| state | kind | default | forced | owner | why |
+| --- | --- | --- | --- | --- | --- |
+| `ankiOnly.neverImported` | `create` | `—` | `—` | `import` | Untracked Anki note: counted as needing import. |
+| `ankiOnly.fileDeleted` | `missing` | `—` | `—` | `sync` | No file: the purge path handles it outside this table, the tombstone rule arrives with OBSID-19. |
+| `synced.clean` | `quiet` | `CHECK` | `—` | `sync` | Both sides match: nothing to do. |
+| `synced.ankiNewer` | `overwrite` | `PULL` | `—` | `sync` | Newer in Anki: refreshes the vault file. |
+| `synced.vaultNewer` | `overwrite` | `PUSH` | `—` | `sync` | Newer in Obsidian: pushes to Anki. |
+| `synced.diverged` | `conflict` | `RESOLVE_NEWEST` | `—` | `sync` | Edited in both: the newer side wins. |
+| `linked.unenrolled` | `quiet` | `—` | `—` | `wizard` | Enrolling is the wizards' job. |
+| `vaultOnly.unexported` | `create` | `—` | `—` | `export` | Vault only: the export wizard creates it. |
+| `vaultOnly.unenrolled` | `quiet` | `—` | `—` | `wizard` | Enrolling is the wizards' job. |
+| `vaultOnly.ankiDeleted` | `missing` | `—` | `—` | `sync` | Gone from Anki: the purge path handles it, DELETE_FILE arrives with OBSID-20. |
+| `orphaned` | `missing` | `—` | `—` | `purge` | Only a stale record left: Purge ledger forgets it. |
+
+
+</details>
 
 ## 3. How They Relate — Dependency Graph
 

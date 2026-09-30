@@ -319,6 +319,27 @@ export function syncDecisionTableMarkdown(): string {
   return [...header, ...rows].join("\n");
 }
 
+export function syncDecisionTableMarkdownCommandCentric(): string {
+  const sections: string[] = [];
+  for (const command of SYNC_COMMANDS) {
+    const rows = Object.entries(decisions[command]).map(
+      ([status, row]) =>
+        `| \`${status}\` | \`${row.kind}\` | \`${row.act === OUT_OF_SCOPE ? "—" : row.act}\` | \`${row.forcedAct ?? "—"}\` | \`${row.owner}\` | ${whyOf(row)} |`,
+    );
+    sections.push(
+      [
+        `### ${command} (force: ${forceLabels[command]})`,
+        "",
+        "| state | kind | default | forced | owner | why |",
+        "| --- | --- | --- | --- | --- | --- |",
+        ...rows,
+        "",
+      ].join("\n"),
+    );
+  }
+  return sections.join("\n");
+}
+
 function statusId(status: string): string {
   return status.replace(".", "_");
 }
