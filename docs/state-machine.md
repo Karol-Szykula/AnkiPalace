@@ -228,6 +228,7 @@ flowchart LR
 | `vaultOnly.ankiDeleted` | `missing` | `OUT_OF_SCOPE` | `-` | `sync` | Gone from Anki: the purge path handles it, DELETE_FILE arrives with OBSID-20. |
 | `orphaned` | `missing` | `OUT_OF_SCOPE` | `-` | `purge` | Only a stale record left: Purge ledger forgets it. |
 
+
 ## 3. How They Relate — Dependency Graph
 
 ```mermaid

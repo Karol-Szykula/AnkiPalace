@@ -305,10 +305,11 @@ export function syncDecisionTableMarkdown(): string {
         "| state | kind | default | forced | owner | why |",
         "| --- | --- | --- | --- | --- |",
         ...rows,
+        "", // trailing blank line for proper table separation
       ].join("\n"),
     );
   }
-  return sections.join("\n\n");
+  return sections.join("\n");
 }
 
 function statusId(status: string): string {
