@@ -267,9 +267,9 @@ describe("the forced outcomes", () => {
 });
 
 describe("syncDecisionTableMarkdown", () => {
-  test("given the sync decision table doc when generated then it matches the table", () => {
+  test("given the state machine doc when generated then it matches the table", () => {
     // given
-    const doc = readFileSync("docs/sync-decision-table.md", "utf8");
+    const doc = readFileSync("docs/state-machine.md", "utf8");
 
     // when
     const table = syncDecisionTableMarkdown();

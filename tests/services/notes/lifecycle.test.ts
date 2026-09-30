@@ -250,9 +250,9 @@ describe("classifyNoteLifecycle", () => {
 });
 
 describe("noteLifecycleMermaid", () => {
-  test("given the synchronization doc when generated then it matches the table", () => {
+  test("given the state machine doc when generated then it matches the table", () => {
     // given
-    const doc = readFileSync("docs/synchronization.md", "utf8");
+    const doc = readFileSync("docs/state-machine.md", "utf8");
 
     // when
     const diagram = noteLifecycleMermaid();
