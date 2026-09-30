@@ -292,24 +292,31 @@ function whyOf(row: SyncDecisionRow): string {
 }
 
 export function syncDecisionTableMarkdown(): string {
-  const sections: string[] = [];
-  for (const command of SYNC_COMMANDS) {
-    const rows = Object.entries(decisions[command]).map(
-      ([status, row]) =>
-        `| \`${status}\` | \`${row.kind}\` | \`${row.act}\` | \`${row.forcedAct ?? "-"}\` | \`${row.owner}\` | ${whyOf(row)} |`,
-    );
-    sections.push(
-      [
-        `## ${command} (force: ${forceLabels[command]})`,
-        "",
-        "| state | kind | default | forced | owner | why |",
-        "| --- | --- | --- | --- | --- |",
-        ...rows,
-        "", // trailing blank line for proper table separation
-      ].join("\n"),
-    );
-  }
-  return sections.join("\n");
+  const header = [
+    "| State | Import (Anki wins) | Export (Obsidian wins) | Sync (no force) |",
+    "|-------|--------------------|------------------------|-----------------|",
+  ];
+
+  const rows = NOTE_LIFECYCLE_STATUSES.map((status) => {
+    const cells = SYNC_COMMANDS.map((command) => {
+      const row = decisions[command][status];
+      const defaultStr = row.act === OUT_OF_SCOPE ? "—" : row.act;
+      const forcedStr = row.forcedAct ?? "—";
+      const kind = row.kind;
+      const owner = row.owner;
+      const forcedInfo =
+        row.forcedAct !== undefined
+          ? `<br/>**Force:** ${row.forcedAct} (${forceLabels[command]})`
+          : "";
+      const rationale = whyOf(row).replace(/\n/g, " ");
+      const defaultPart = `\`${defaultStr}\``;
+      const forcePart = forcedStr !== "—" ? ` / \`${forcedStr}\` (force)` : "";
+      return `${defaultPart}${forcePart}<br/>${kind} · ${owner}${forcedInfo}<br/>${rationale}`;
+    });
+    return `| \`${status}\` | ${cells.join(" | ")} |`;
+  });
+
+  return [...header, ...rows].join("\n");
 }
 
 function statusId(status: string): string {
