@@ -2,6 +2,7 @@ import type {
   NoteLifecycleEvent,
   NoteLifecycleStatus,
 } from "src/services/notes/lifecycle";
+import { NOTE_LIFECYCLE_STATUSES } from "src/services/notes/lifecycle";
 
 export const OUT_OF_SCOPE = "OUT_OF_SCOPE";
 
@@ -308,4 +309,47 @@ export function syncDecisionTableMarkdown(): string {
     );
   }
   return sections.join("\n\n");
+}
+
+export function syncDecisionTableMermaid(): string {
+  const lines = ["flowchart LR"];
+  lines.push("  subgraph Commands");
+  lines.push("    direction TB");
+  lines.push('    Import["Import (Anki wins)"]');
+  lines.push('    Export["Export (Obsidian wins)"]');
+  lines.push('    Sync["Sync (no force)"]');
+  lines.push("  end");
+  lines.push("");
+  lines.push("  subgraph States");
+  lines.push("    direction TB");
+  for (const status of NOTE_LIFECYCLE_STATUSES) {
+    const id = status.replace(".", "_");
+    lines.push(`    ${id}["${status}"]`);
+  }
+  lines.push("  end");
+  lines.push("");
+  for (const command of SYNC_COMMANDS) {
+    const cmdNode = command.charAt(0).toUpperCase() + command.slice(1);
+    for (const [status, row] of Object.entries(decisions[command])) {
+      const statusId = status.replace(".", "_");
+      const defaultAct = row.act === OUT_OF_SCOPE ? "—" : row.act;
+      const forcedAct = row.forcedAct ?? "—";
+      const kind = row.kind;
+      const owner = row.owner;
+      const label = `def:${defaultAct}\\nforce:${forcedAct}\\nkind:${kind}\\nowner:${owner}`;
+      lines.push(`  ${cmdNode} -->|${label}| ${statusId}`);
+      if (row.forcedAct !== undefined) {
+        lines.push(`  ${statusId} -.->|forced: ${row.forcedAct}| ${cmdNode}`);
+      }
+    }
+  }
+  lines.push("");
+  lines.push("  classDef cmd fill:#e1f5fe,stroke:#01579b,stroke-width:2px;");
+  lines.push("  classDef state fill:#f3e5f5,stroke:#4a148c,stroke-width:1px;");
+  lines.push("  class Import,Export,Sync cmd;");
+  for (const status of NOTE_LIFECYCLE_STATUSES) {
+    const id = status.replace(".", "_");
+    lines.push(`  class ${id} state;`);
+  }
+  return lines.join("\n");
 }

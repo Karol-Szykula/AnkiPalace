@@ -12,6 +12,7 @@ import {
   SYNC_COMMANDS,
   syncDecisionFor,
   syncDecisionTableMarkdown,
+  syncDecisionTableMermaid,
   type OutcomeKind,
   type SyncCommand,
   type SyncDecisionAct,
@@ -275,5 +276,18 @@ describe("syncDecisionTableMarkdown", () => {
 
     // then
     expect(doc).toContain(table);
+  });
+});
+
+describe("syncDecisionTableMermaid", () => {
+  test("given the state machine doc when generated then it contains the decision table mermaid", () => {
+    // given
+    const doc = readFileSync("docs/state-machine.md", "utf8");
+
+    // when
+    const mermaid = syncDecisionTableMermaid();
+
+    // then
+    expect(doc).toContain(`\`\`\`mermaid\n${mermaid}\n\`\`\``);
   });
 });
