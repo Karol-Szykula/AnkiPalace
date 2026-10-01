@@ -348,26 +348,22 @@ function cmdNode(command: string): string {
   return command.charAt(0).toUpperCase() + command.slice(1);
 }
 
-function rowLabel(row: SyncDecisionRow): string {
-  const defaultAct = row.act === OUT_OF_SCOPE ? "—" : row.act;
-  const forcedAct = row.forcedAct ?? "—";
-  const label = `def:${defaultAct}\\nforce:${forcedAct}\\nkind:${row.kind}\\nowner:${row.owner}`;
-  return label.replace(/\[/g, "&#91;").replace(/\]/g, "&#93;");
-}
-
-function buildCommandSubgraph(lines: string[]): void {
-  lines.push("  subgraph COMMANDS[Commands]");
-  lines.push("    direction TB");
-  lines.push('    Import["Import (Anki wins)"]');
-  lines.push('    Export["Export (Obsidian wins)"]');
-  lines.push('    Sync["Sync (no force)"]');
-  lines.push("  end");
-  lines.push("");
+function cellContent(row: SyncDecisionRow, command: SyncCommand): string {
+  const forcedInfo =
+    row.forcedAct !== undefined
+      ? `<br/>force: ${row.forcedAct} (${forceLabels[command]})`
+      : "";
+  const rationale = whyOf(row).replace(/\n/g, " ");
+  const actSymbol = row.act === OUT_OF_SCOPE ? "\u2014" : row.act;
+  const forcedPart =
+    row.forcedAct !== undefined ? ` / \`${row.forcedAct}\` (force)` : "";
+  const base = `\`${actSymbol}\`${forcedPart}<br/>${row.kind} \u00b7 ${row.owner}`;
+  return `${base}${forcedInfo}<br/>${rationale}`;
 }
 
 function buildStatesSubgraph(lines: string[]): void {
   lines.push("  subgraph STATES[States]");
-  lines.push("    direction TB");
+  lines.push("  direction TB");
   for (const status of NOTE_LIFECYCLE_STATUSES) {
     lines.push(`    ${statusId(status)}["${status}"]`);
   }
@@ -375,39 +371,51 @@ function buildStatesSubgraph(lines: string[]): void {
   lines.push("");
 }
 
-function buildCommandEdges(lines: string[]): void {
-  for (const command of SYNC_COMMANDS) {
-    const node = cmdNode(command);
-    for (const [status, row] of Object.entries(decisions[command])) {
-      const sid = statusId(status);
-      const label = rowLabel(row);
-      lines.push(`  ${node} -->|${label}| ${sid}`);
-      if (row.forcedAct !== undefined) {
-        lines.push(`  ${sid} -.->|forced: ${row.forcedAct}| ${node}`);
-      }
-    }
-  }
-  lines.push("");
+function getCommandLabel(command: SyncCommand): string {
+  if (command === "import") return 'Import["Import (Anki wins)"]';
+  if (command === "export") return 'Export["Export (Obsidian wins)"]';
+  return 'Sync["Sync (no force)"]';
 }
 
-function buildClassDefs(lines: string[]): void {
+function buildCommandDiagram(command: SyncCommand): string {
+  const lines = ["flowchart TB"];
+  lines.push("  subgraph COMMAND[Command]");
+  lines.push("  direction TB");
+  const label = getCommandLabel(command);
+  lines.push(`    ${cmdNode(command)}[${label}]`);
+  lines.push("  end");
+  lines.push("");
+
+  buildStatesSubgraph(lines);
+  lines.push(`  ${cmdNode(command)} -->|start| START["[*]"]`);
+  lines.push("");
+
+  for (const [status, row] of Object.entries(decisions[command])) {
+    const sid = statusId(status);
+    const content = cellContent(row, command);
+    lines.push(`  ${cmdNode(command)} -->|${content}| ${sid}`);
+    if (row.forcedAct !== undefined) {
+      lines.push(`  ${sid} -.->|forced: ${row.forcedAct}| ${cmdNode(command)}`);
+    }
+  }
+
+  lines.push("");
+  lines.push(`  ${cmdNode(command)} -->|end| END["[*]"]`);
+  lines.push("");
+
   lines.push(
     "  classDef cmd fill:#e8eaf6,stroke:#283593,stroke-width:2px,color:#1a237e;",
   );
   lines.push(
     "  classDef state fill:#fce4ec,stroke:#ad1457,stroke-width:1px,color:#880e4f;",
   );
-  lines.push("  class Import,Export,Sync cmd;");
+  lines.push(`  class ${cmdNode(command)} cmd;`);
   for (const status of NOTE_LIFECYCLE_STATUSES) {
     lines.push(`  class ${statusId(status)} state;`);
   }
+  return lines.join("\n");
 }
 
 export function syncDecisionTableMermaid(): string {
-  const lines = ["flowchart TB"];
-  buildCommandSubgraph(lines);
-  buildStatesSubgraph(lines);
-  buildCommandEdges(lines);
-  buildClassDefs(lines);
-  return lines.join("\n");
+  return SYNC_COMMANDS.map(buildCommandDiagram).join("\n\n");
 }

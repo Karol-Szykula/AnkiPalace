@@ -109,15 +109,13 @@ This is the **second independent authority**. It defines what each command (impo
 
 ```mermaid
 flowchart TB
-  subgraph COMMANDS[Commands]
-    direction TB
-    Import["Import (Anki wins)"]
-    Export["Export (Obsidian wins)"]
-    Sync["Sync (no force)"]
+  subgraph COMMAND[Command]
+  direction TB
+    Export[Export["Export (Obsidian wins)"]]
   end
 
   subgraph STATES[States]
-    direction TB
+  direction TB
     ankiOnly_neverImported["ankiOnly.neverImported"]
     ankiOnly_fileDeleted["ankiOnly.fileDeleted"]
     synced_clean["synced.clean"]
@@ -131,49 +129,135 @@ flowchart TB
     orphaned["orphaned"]
   end
 
-  Export -->|def:—\nforce:—\nkind:create\nowner:import| ankiOnly_neverImported
-  Export -->|def:—\nforce:—\nkind:missing\nowner:sync| ankiOnly_fileDeleted
-  Export -->|def:CHECK\nforce:—\nkind:quiet\nowner:sync| synced_clean
-  Export -->|def:—\nforce:FORCE_PUSH\nkind:skip\nowner:sync| synced_ankiNewer
+  Export -->|start| START["[*]"]
+
+  Export -->|`—`<br/>create · import<br/>Anki only: the import wizard brings it in.| ankiOnly_neverImported
+  Export -->|`—`<br/>missing · sync<br/>File gone: Sync decides, nothing to push.| ankiOnly_fileDeleted
+  Export -->|`CHECK`<br/>quiet · sync<br/>Both sides match: nothing to write.| synced_clean
+  Export -->|`—` / `FORCE_PUSH` (force)<br/>skip · sync<br/>force: FORCE_PUSH (Obsidian wins)<br/>Newer in Anki: skipped, use Sync. Forced: Obsidian wins: overwrites Anki.| synced_ankiNewer
   synced_ankiNewer -.->|forced: FORCE_PUSH| Export
-  Export -->|def:PUSH\nforce:—\nkind:overwrite\nowner:export| synced_vaultNewer
-  Export -->|def:—\nforce:FORCE_PUSH\nkind:conflict\nowner:sync| synced_diverged
+  Export -->|`PUSH`<br/>overwrite · export<br/>Newer in Obsidian: pushes to Anki.| synced_vaultNewer
+  Export -->|`—` / `FORCE_PUSH` (force)<br/>conflict · sync<br/>force: FORCE_PUSH (Obsidian wins)<br/>Edited in both: skipped, use Sync. Forced: Obsidian wins: overwrites Anki.| synced_diverged
   synced_diverged -.->|forced: FORCE_PUSH| Export
-  Export -->|def:ENROLL\nforce:—\nkind:quiet\nowner:wizard| linked_unenrolled
-  Export -->|def:EXPORT\nforce:—\nkind:create\nowner:export| vaultOnly_unexported
-  Export -->|def:ENROLL\nforce:—\nkind:quiet\nowner:wizard| vaultOnly_unenrolled
-  Export -->|def:—\nforce:EXPORT\nkind:missing\nowner:sync| vaultOnly_ankiDeleted
+  Export -->|`ENROLL`<br/>quiet · wizard<br/>Has an id but no record: enrols it, writes nothing.| linked_unenrolled
+  Export -->|`EXPORT`<br/>create · export<br/>Vault only: creates the Anki note, writes the id back.| vaultOnly_unexported
+  Export -->|`ENROLL`<br/>quiet · wizard<br/>Has an id but no record: enrols it, writes nothing.| vaultOnly_unenrolled
+  Export -->|`—` / `EXPORT` (force)<br/>missing · sync<br/>force: EXPORT (Obsidian wins)<br/>Gone from Anki: Sync applies the deletion. Forced: Obsidian wins: re-creates it in Anki.| vaultOnly_ankiDeleted
   vaultOnly_ankiDeleted -.->|forced: EXPORT| Export
-  Export -->|def:—\nforce:—\nkind:missing\nowner:purge| orphaned
-  Import -->|def:IMPORT\nforce:—\nkind:create\nowner:import| ankiOnly_neverImported
-  Import -->|def:—\nforce:RESURRECT\nkind:missing\nowner:sync| ankiOnly_fileDeleted
-  ankiOnly_fileDeleted -.->|forced: RESURRECT| Import
-  Import -->|def:CHECK\nforce:—\nkind:quiet\nowner:sync| synced_clean
-  Import -->|def:PULL\nforce:—\nkind:overwrite\nowner:sync| synced_ankiNewer
-  Import -->|def:—\nforce:FORCE_PULL\nkind:skip\nowner:sync| synced_vaultNewer
-  synced_vaultNewer -.->|forced: FORCE_PULL| Import
-  Import -->|def:—\nforce:FORCE_PULL\nkind:conflict\nowner:sync| synced_diverged
-  synced_diverged -.->|forced: FORCE_PULL| Import
-  Import -->|def:ENROLL\nforce:—\nkind:quiet\nowner:wizard| linked_unenrolled
-  Import -->|def:—\nforce:—\nkind:create\nowner:export| vaultOnly_unexported
-  Import -->|def:ENROLL\nforce:—\nkind:quiet\nowner:wizard| vaultOnly_unenrolled
-  Import -->|def:—\nforce:—\nkind:missing\nowner:sync| vaultOnly_ankiDeleted
-  Import -->|def:—\nforce:—\nkind:missing\nowner:purge| orphaned
-  Sync -->|def:—\nforce:—\nkind:create\nowner:import| ankiOnly_neverImported
-  Sync -->|def:—\nforce:—\nkind:missing\nowner:sync| ankiOnly_fileDeleted
-  Sync -->|def:CHECK\nforce:—\nkind:quiet\nowner:sync| synced_clean
-  Sync -->|def:PULL\nforce:—\nkind:overwrite\nowner:sync| synced_ankiNewer
-  Sync -->|def:PUSH\nforce:—\nkind:overwrite\nowner:sync| synced_vaultNewer
-  Sync -->|def:RESOLVE_NEWEST\nforce:—\nkind:conflict\nowner:sync| synced_diverged
-  Sync -->|def:—\nforce:—\nkind:quiet\nowner:wizard| linked_unenrolled
-  Sync -->|def:—\nforce:—\nkind:create\nowner:export| vaultOnly_unexported
-  Sync -->|def:—\nforce:—\nkind:quiet\nowner:wizard| vaultOnly_unenrolled
-  Sync -->|def:—\nforce:—\nkind:missing\nowner:sync| vaultOnly_ankiDeleted
-  Sync -->|def:—\nforce:—\nkind:missing\nowner:purge| orphaned
+  Export -->|`—`<br/>missing · purge<br/>Only a stale record left: Purge ledger forgets it.| orphaned
+
+  Export -->|end| END["[*]"]
 
   classDef cmd fill:#e8eaf6,stroke:#283593,stroke-width:2px,color:#1a237e;
   classDef state fill:#fce4ec,stroke:#ad1457,stroke-width:1px,color:#880e4f;
-  class Import,Export,Sync cmd;
+  class Export cmd;
+  class ankiOnly_neverImported state;
+  class ankiOnly_fileDeleted state;
+  class synced_clean state;
+  class synced_ankiNewer state;
+  class synced_vaultNewer state;
+  class synced_diverged state;
+  class linked_unenrolled state;
+  class vaultOnly_unexported state;
+  class vaultOnly_unenrolled state;
+  class vaultOnly_ankiDeleted state;
+  class orphaned state;
+
+flowchart TB
+  subgraph COMMAND[Command]
+  direction TB
+    Import[Import["Import (Anki wins)"]]
+  end
+
+  subgraph STATES[States]
+  direction TB
+    ankiOnly_neverImported["ankiOnly.neverImported"]
+    ankiOnly_fileDeleted["ankiOnly.fileDeleted"]
+    synced_clean["synced.clean"]
+    synced_ankiNewer["synced.ankiNewer"]
+    synced_vaultNewer["synced.vaultNewer"]
+    synced_diverged["synced.diverged"]
+    linked_unenrolled["linked.unenrolled"]
+    vaultOnly_unexported["vaultOnly.unexported"]
+    vaultOnly_unenrolled["vaultOnly.unenrolled"]
+    vaultOnly_ankiDeleted["vaultOnly.ankiDeleted"]
+    orphaned["orphaned"]
+  end
+
+  Import -->|start| START["[*]"]
+
+  Import -->|`IMPORT`<br/>create · import<br/>Anki only: creates the file.| ankiOnly_neverImported
+  Import -->|`—` / `RESURRECT` (force)<br/>missing · sync<br/>force: RESURRECT (Anki wins)<br/>File gone: Sync decides, Anki wins re-creates it. Forced: Anki wins: re-creates the file you deleted.| ankiOnly_fileDeleted
+  ankiOnly_fileDeleted -.->|forced: RESURRECT| Import
+  Import -->|`CHECK`<br/>quiet · sync<br/>Both sides match: rewrites nothing. Forced: Anki wins: rewrites the same content.| synced_clean
+  Import -->|`PULL`<br/>overwrite · sync<br/>Newer in Anki: overwrites your file.| synced_ankiNewer
+  Import -->|`—` / `FORCE_PULL` (force)<br/>skip · sync<br/>force: FORCE_PULL (Anki wins)<br/>Newer in Obsidian: skipped, use Sync. Forced: Anki wins: overwrites your newer edits.| synced_vaultNewer
+  synced_vaultNewer -.->|forced: FORCE_PULL| Import
+  Import -->|`—` / `FORCE_PULL` (force)<br/>conflict · sync<br/>force: FORCE_PULL (Anki wins)<br/>Edited in both: newest wins on Sync. Forced: Anki wins: overwrites your newer edits.| synced_diverged
+  synced_diverged -.->|forced: FORCE_PULL| Import
+  Import -->|`ENROLL`<br/>quiet · wizard<br/>Has an id but no record: enrols it, rewrites the same file.| linked_unenrolled
+  Import -->|`—`<br/>create · export<br/>Vault only: the export wizard creates it.| vaultOnly_unexported
+  Import -->|`ENROLL`<br/>quiet · wizard<br/>Has an id but no record: enrols it, rewrites the same file.| vaultOnly_unenrolled
+  Import -->|`—`<br/>missing · sync<br/>Gone from Anki: Sync deletes the file.| vaultOnly_ankiDeleted
+  Import -->|`—`<br/>missing · purge<br/>Only a stale record left: Purge ledger forgets it.| orphaned
+
+  Import -->|end| END["[*]"]
+
+  classDef cmd fill:#e8eaf6,stroke:#283593,stroke-width:2px,color:#1a237e;
+  classDef state fill:#fce4ec,stroke:#ad1457,stroke-width:1px,color:#880e4f;
+  class Import cmd;
+  class ankiOnly_neverImported state;
+  class ankiOnly_fileDeleted state;
+  class synced_clean state;
+  class synced_ankiNewer state;
+  class synced_vaultNewer state;
+  class synced_diverged state;
+  class linked_unenrolled state;
+  class vaultOnly_unexported state;
+  class vaultOnly_unenrolled state;
+  class vaultOnly_ankiDeleted state;
+  class orphaned state;
+
+flowchart TB
+  subgraph COMMAND[Command]
+  direction TB
+    Sync[Sync["Sync (no force)"]]
+  end
+
+  subgraph STATES[States]
+  direction TB
+    ankiOnly_neverImported["ankiOnly.neverImported"]
+    ankiOnly_fileDeleted["ankiOnly.fileDeleted"]
+    synced_clean["synced.clean"]
+    synced_ankiNewer["synced.ankiNewer"]
+    synced_vaultNewer["synced.vaultNewer"]
+    synced_diverged["synced.diverged"]
+    linked_unenrolled["linked.unenrolled"]
+    vaultOnly_unexported["vaultOnly.unexported"]
+    vaultOnly_unenrolled["vaultOnly.unenrolled"]
+    vaultOnly_ankiDeleted["vaultOnly.ankiDeleted"]
+    orphaned["orphaned"]
+  end
+
+  Sync -->|start| START["[*]"]
+
+  Sync -->|`—`<br/>create · import<br/>Untracked Anki note: counted as needing import.| ankiOnly_neverImported
+  Sync -->|`—`<br/>missing · sync<br/>No file: the purge path handles it outside this table, the tombstone rule arrives with OBSID-19.| ankiOnly_fileDeleted
+  Sync -->|`CHECK`<br/>quiet · sync<br/>Both sides match: nothing to do.| synced_clean
+  Sync -->|`PULL`<br/>overwrite · sync<br/>Newer in Anki: refreshes the vault file.| synced_ankiNewer
+  Sync -->|`PUSH`<br/>overwrite · sync<br/>Newer in Obsidian: pushes to Anki.| synced_vaultNewer
+  Sync -->|`RESOLVE_NEWEST`<br/>conflict · sync<br/>Edited in both: the newer side wins.| synced_diverged
+  Sync -->|`—`<br/>quiet · wizard<br/>Enrolling is the wizards' job.| linked_unenrolled
+  Sync -->|`—`<br/>create · export<br/>Vault only: the export wizard creates it.| vaultOnly_unexported
+  Sync -->|`—`<br/>quiet · wizard<br/>Enrolling is the wizards' job.| vaultOnly_unenrolled
+  Sync -->|`—`<br/>missing · sync<br/>Gone from Anki: the purge path handles it, DELETE_FILE arrives with OBSID-20.| vaultOnly_ankiDeleted
+  Sync -->|`—`<br/>missing · purge<br/>Only a stale record left: Purge ledger forgets it.| orphaned
+
+  Sync -->|end| END["[*]"]
+
+  classDef cmd fill:#e8eaf6,stroke:#283593,stroke-width:2px,color:#1a237e;
+  classDef state fill:#fce4ec,stroke:#ad1457,stroke-width:1px,color:#880e4f;
+  class Sync cmd;
   class ankiOnly_neverImported state;
   class ankiOnly_fileDeleted state;
   class synced_clean state;
