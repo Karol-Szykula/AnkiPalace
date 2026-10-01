@@ -356,8 +356,8 @@ function cellContent(row: SyncDecisionRow, command: SyncCommand): string {
   const rationale = whyOf(row).replace(/\n/g, " ");
   const actSymbol = row.act === OUT_OF_SCOPE ? "\u2014" : row.act;
   const forcedPart =
-    row.forcedAct !== undefined ? ` / \`${row.forcedAct}\` (force)` : "";
-  const base = `\`${actSymbol}\`${forcedPart}<br/>${row.kind} \u00b7 ${row.owner}`;
+    row.forcedAct !== undefined ? ` / ${row.forcedAct} (force)` : "";
+  const base = `${actSymbol}${forcedPart}<br/>${row.kind} \u00b7 ${row.owner}`;
   return `${base}${forcedInfo}<br/>${rationale}`;
 }
 
