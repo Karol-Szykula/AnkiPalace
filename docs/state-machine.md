@@ -111,7 +111,7 @@ This is the **second independent authority**. It defines what each command (impo
 flowchart TB
   subgraph COMMAND[Command]
   direction TB
-    Export[Export['Export (Obsidian wins)']]
+    Export[Export (Obsidian wins)]
   end
 
   subgraph STATES[States]
@@ -166,7 +166,7 @@ flowchart TB
 flowchart TB
   subgraph COMMAND[Command]
   direction TB
-    Import[Import['Import (Anki wins)']]
+    Import[Import (Anki wins)]
   end
 
   subgraph STATES[States]
@@ -221,7 +221,7 @@ flowchart TB
 flowchart TB
   subgraph COMMAND[Command]
   direction TB
-    Sync[Sync['Sync (no force)']]
+    Sync[Sync (no force)]
   end
 
   subgraph STATES[States]
