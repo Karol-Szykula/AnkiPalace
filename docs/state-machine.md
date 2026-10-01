@@ -110,6 +110,7 @@ This is the **second independent authority**. It defines what each command (impo
 ### 2.2.1 Export Wizard (force: Obsidian wins)
 
 ```mermaid
+%%{init: {"flowchart": {"defaultRenderer": "elk"}} }%%
 flowchart TB
   subgraph COMMAND[Command]
   direction TB
@@ -169,6 +170,7 @@ flowchart TB
 ### 2.2.2 Import Wizard (force: Anki wins)
 
 ```mermaid
+%%{init: {"flowchart": {"defaultRenderer": "elk"}} }%%
 flowchart TB
   subgraph COMMAND[Command]
   direction TB
@@ -228,6 +230,7 @@ flowchart TB
 ### 2.2.3 Sync Command (no force)
 
 ```mermaid
+%%{init: {"flowchart": {"defaultRenderer": "elk"}} }%%
 flowchart TB
   subgraph COMMAND[Command]
   direction TB
@@ -354,6 +357,7 @@ flowchart TB
 ## 3. How They Relate — Dependency Graph
 
 ```mermaid
+%%{init: {"flowchart": {"defaultRenderer": "elk"}} }%%
 flowchart TB
   subgraph SOURCE["Source Tables (Manual)"]
     direction TB
@@ -405,17 +409,56 @@ flowchart TB
 
 ## 4. Classification & Event Resolution — The Runtime Flow
 
-Every sync operation follows this chain:
+### Step-by-step
+
+1. **classifyNoteLifecycle(anki?, block?, record?)** — Single entry point. Compares:
+   - `block.hash !== record.lastHash` → `vaultDirty`
+   - `anki.mod > record.lastMod` → `ankiDirty`
+   - Returns one of 11 `NoteLifecycleStatus` values.
+
+2. **decisionActFor(command, status, forced?)** — Looks up `decisions[command][status]`:
+   - Returns `act` (default) or `forcedAct` (if `isForced`).
+   - May return `OUT_OF_SCOPE` (command defers to another).
+
+3. **transitionNoteLifecycle(status, event)** — Gateway:
+   - Validates `event` exists in `NOTE_LIFECYCLE_EVENTS`.
+   - Uses xstate snapshot to check `can({type: event})`.
+   - Throws if illegal; returns `nextStatus` if legal.
+
+4. **syncedCleanRecord(hash, mod)** — Creates fresh ledger record:
+   - `lastHash` = content hash
+   - `lastMod` = Anki's `mod` (seconds)
+   - `status = "synced.clean"`
+
+## 5. The Two Tables — Relationship at Runtime
 
 ```mermaid
+%%{init: {"flowchart": {"defaultRenderer": "elk"}} }%%
 flowchart TB
-  A["classifyNoteLifecycle"] -->|returns NoteLifecycleStatus| B
-  B["decisionActFor"] -->|returns NoteLifecycleEvent or OUT_OF_SCOPE| C
-  C -->|if in scope| D["transitionNoteLifecycle"]
-  D -->|validated by xstate| E["nextStatus"]
-  E --> F["syncedCleanRecord"]
-  F --> G["update ledger"]
-  C -.->|if OUT_OF_SCOPE| H["no state change, counted in report"]
+  subgraph SRC1["Source 1: Machine Topology"]
+    direction TB
+    LT["lifecycleTransitions"]
+  end
+  subgraph SRC2["Source 2: Command Policy"]
+    direction TB
+    DT["decisions"]
+  end
+
+  LT --> XSTATE["xstate machine"]
+  XSTATE --> TRANSIT["transitionNoteLifecycle"]
+
+  DT --> DECIDE["decisionActFor"]
+  DECIDE -->|event| TRANSIT
+
+  CLASSIFY["classifyNoteLifecycle"] --> DECIDE
+  TRANSIT --> LEDGER["syncedCleanRecord"]
+
+  classDef src fill:#e8f5e9,stroke:#33691e,stroke-width:2px,color:#1b5e20;
+  classDef derived fill:#fff8e1,stroke:#f57c00,stroke-width:2px,color:#e65100;
+  classDef runtime fill:#e8eaf6,stroke:#283593,stroke-width:2px,color:#1a237e;
+  class LT,DT src;
+  class DECIDE derived;
+  class CLASSIFY,DECIDE,TRANSIT runtime;
 
   classDef entry fill:#e8eaf6,stroke:#283593,stroke-width:2px,color:#1a237e;
   classDef decision fill:#fff8e1,stroke:#f57c00,stroke-width:2px,color:#e65100;
@@ -451,6 +494,7 @@ flowchart TB
 ## 5. The Two Tables — Relationship at Runtime
 
 ```mermaid
+%%{init: {"flowchart": {"defaultRenderer": "elk"}} }%%
 flowchart TB
   subgraph SRC1["Source 1: Machine Topology"]
     direction TB
