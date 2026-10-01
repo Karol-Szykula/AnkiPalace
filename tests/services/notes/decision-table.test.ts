@@ -289,7 +289,9 @@ describe("syncDecisionTableMermaid", () => {
     syncDecisionTableMermaid("export");
 
     // then - check that the markdown contains an img tag for the export diagram
-    expect(doc).toContain('![2. Export Wizard (force: Obsidian wins)](./diagrams/decision-table-export.svg)');
+    expect(doc).toContain(
+      "![2. Export Wizard (force: Obsidian wins)](./diagrams/decision-table-export.svg)",
+    );
   });
 
   test("given the state machine doc when generated then it contains the import decision table img", () => {
@@ -300,7 +302,9 @@ describe("syncDecisionTableMermaid", () => {
     syncDecisionTableMermaid("import");
 
     // then
-    expect(doc).toContain('![3. Import Wizard (force: Anki wins)](./diagrams/decision-table-import.svg)');
+    expect(doc).toContain(
+      "![3. Import Wizard (force: Anki wins)](./diagrams/decision-table-import.svg)",
+    );
   });
 
   test("given the state machine doc when generated then it contains the sync decision table img", () => {
@@ -311,7 +315,9 @@ describe("syncDecisionTableMermaid", () => {
     syncDecisionTableMermaid("sync");
 
     // then
-    expect(doc).toContain('![4. Sync Command (no force)](./diagrams/decision-table-sync.svg)');
+    expect(doc).toContain(
+      "![4. Sync Command (no force)](./diagrams/decision-table-sync.svg)",
+    );
   });
 });
 
