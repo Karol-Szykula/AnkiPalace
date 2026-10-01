@@ -382,7 +382,7 @@ function buildCommandDiagram(command: SyncCommand): string {
   lines.push("  subgraph COMMAND[Command]");
   lines.push("  direction TB");
   const label = getCommandLabel(command);
-  lines.push(`    ${cmdNode(command)}[${label}]`);
+  lines.push(`    ${cmdNode(command)}["${label}"]`);
   lines.push("  end");
   lines.push("");
 
