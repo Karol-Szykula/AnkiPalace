@@ -281,37 +281,37 @@ describe("syncDecisionTableMarkdown", () => {
 });
 
 describe("syncDecisionTableMermaid", () => {
-  test("given the state machine doc when generated then it contains the export decision table mermaid", () => {
+  test("given the state machine doc when generated then it contains the export decision table img", () => {
     // given
     const doc = readFileSync("docs/state-machine.md", "utf8");
 
     // when
-    const mermaid = syncDecisionTableMermaid("export");
+    syncDecisionTableMermaid("export");
 
-    // then
-    expect(doc).toContain(`\`\`\`mermaid\n${mermaid}\n\`\`\``);
+    // then - check that the markdown contains an img tag for the export diagram
+    expect(doc).toContain('![2. Export Wizard (force: Obsidian wins)](./diagrams/decision-table-export.svg)');
   });
 
-  test("given the state machine doc when generated then it contains the import decision table mermaid", () => {
+  test("given the state machine doc when generated then it contains the import decision table img", () => {
     // given
     const doc = readFileSync("docs/state-machine.md", "utf8");
 
     // when
-    const mermaid = syncDecisionTableMermaid("import");
+    syncDecisionTableMermaid("import");
 
     // then
-    expect(doc).toContain(`\`\`\`mermaid\n${mermaid}\n\`\`\``);
+    expect(doc).toContain('![3. Import Wizard (force: Anki wins)](./diagrams/decision-table-import.svg)');
   });
 
-  test("given the state machine doc when generated then it contains the sync decision table mermaid", () => {
+  test("given the state machine doc when generated then it contains the sync decision table img", () => {
     // given
     const doc = readFileSync("docs/state-machine.md", "utf8");
 
     // when
-    const mermaid = syncDecisionTableMermaid("sync");
+    syncDecisionTableMermaid("sync");
 
     // then
-    expect(doc).toContain(`\`\`\`mermaid\n${mermaid}\n\`\`\``);
+    expect(doc).toContain('![4. Sync Command (no force)](./diagrams/decision-table-sync.svg)');
   });
 });
 

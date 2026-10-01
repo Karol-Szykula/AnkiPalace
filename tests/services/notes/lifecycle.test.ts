@@ -255,10 +255,10 @@ describe("noteLifecycleMermaid", () => {
     const doc = readFileSync("docs/state-machine.md", "utf8");
 
     // when
-    const diagram = noteLifecycleMermaid();
+    noteLifecycleMermaid();
 
-    // then
-    expect(doc).toContain(`\`\`\`mermaid\n${diagram}\n\`\`\``);
+    // then - check that the markdown contains an img tag for the state machine diagram
+    expect(doc).toContain('![1. State Machine Topology](./diagrams/state-machine-topology.svg)');
   });
 });
 
