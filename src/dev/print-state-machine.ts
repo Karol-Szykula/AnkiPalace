@@ -83,8 +83,22 @@ ${noteLifecycleMermaid().replace(/\(/g, "<br/>").replace(/\)/g, "")}
 
 This is the **second independent authority**. It defines what each command (import/export/sync) does in each state — which event to emit, whether force changes it, who owns the decision, and why.
 
+### 2.2.1 Export Wizard (force: Obsidian wins)
+
 \`\`\`mermaid
-${syncDecisionTableMermaid()}
+${syncDecisionTableMermaid("export")}
+\`\`\`
+
+### 2.2.2 Import Wizard (force: Anki wins)
+
+\`\`\`mermaid
+${syncDecisionTableMermaid("import")}
+\`\`\`
+
+### 2.2.3 Sync Command (no force)
+
+\`\`\`mermaid
+${syncDecisionTableMermaid("sync")}
 \`\`\`
 
 #### Decision Table (Markdown) — State-Centric (Transposed)

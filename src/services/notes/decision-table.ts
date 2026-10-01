@@ -348,6 +348,12 @@ function cmdNode(command: string): string {
   return command.charAt(0).toUpperCase() + command.slice(1);
 }
 
+function escapeForMermaid(label: string): string {
+  // Escape double quotes and backslashes for Mermaid
+  const escaped = label.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  return `"${escaped}"`;
+}
+
 function cellContent(row: SyncDecisionRow, command: SyncCommand): string {
   const forcedInfo =
     row.forcedAct !== undefined
@@ -358,7 +364,9 @@ function cellContent(row: SyncDecisionRow, command: SyncCommand): string {
   const forcedPart =
     row.forcedAct !== undefined ? ` / ${row.forcedAct} (force)` : "";
   const base = `${actSymbol}${forcedPart}<br/>${row.kind} \u00b7 ${row.owner}`;
-  return `${base}${forcedInfo}<br/>${rationale}`;
+  const content = `${base}${forcedInfo}<br/>${rationale}`;
+  // Return quoted string for Mermaid edge labels
+  return escapeForMermaid(content);
 }
 
 function buildStatesSubgraph(lines: string[]): void {
@@ -395,7 +403,8 @@ function buildCommandDiagram(command: SyncCommand): string {
     const content = cellContent(row, command);
     lines.push(`  ${cmdNode(command)} -->|${content}| ${sid}`);
     if (row.forcedAct !== undefined) {
-      lines.push(`  ${sid} -.->|forced: ${row.forcedAct}| ${cmdNode(command)}`);
+      const forcedLabel = escapeForMermaid(`forced: ${row.forcedAct}`);
+      lines.push(`  ${sid} -.->|${forcedLabel}| ${cmdNode(command)}`);
     }
   }
 
@@ -416,6 +425,9 @@ function buildCommandDiagram(command: SyncCommand): string {
   return lines.join("\n");
 }
 
-export function syncDecisionTableMermaid(): string {
+export function syncDecisionTableMermaid(command?: SyncCommand): string {
+  if (command) {
+    return buildCommandDiagram(command);
+  }
   return SYNC_COMMANDS.map(buildCommandDiagram).join("\n\n");
 }
