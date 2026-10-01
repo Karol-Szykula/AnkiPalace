@@ -281,12 +281,34 @@ describe("syncDecisionTableMarkdown", () => {
 });
 
 describe("syncDecisionTableMermaid", () => {
-  test("given the state machine doc when generated then it contains the decision table mermaid", () => {
+  test("given the state machine doc when generated then it contains the export decision table mermaid", () => {
     // given
     const doc = readFileSync("docs/state-machine.md", "utf8");
 
     // when
-    const mermaid = syncDecisionTableMermaid();
+    const mermaid = syncDecisionTableMermaid("export");
+
+    // then
+    expect(doc).toContain(`\`\`\`mermaid\n${mermaid}\n\`\`\``);
+  });
+
+  test("given the state machine doc when generated then it contains the import decision table mermaid", () => {
+    // given
+    const doc = readFileSync("docs/state-machine.md", "utf8");
+
+    // when
+    const mermaid = syncDecisionTableMermaid("import");
+
+    // then
+    expect(doc).toContain(`\`\`\`mermaid\n${mermaid}\n\`\`\``);
+  });
+
+  test("given the state machine doc when generated then it contains the sync decision table mermaid", () => {
+    // given
+    const doc = readFileSync("docs/state-machine.md", "utf8");
+
+    // when
+    const mermaid = syncDecisionTableMermaid("sync");
 
     // then
     expect(doc).toContain(`\`\`\`mermaid\n${mermaid}\n\`\`\``);

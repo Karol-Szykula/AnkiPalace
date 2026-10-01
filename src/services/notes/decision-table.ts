@@ -350,7 +350,7 @@ function cmdNode(command: string): string {
 
 function escapeForMermaid(label: string): string {
   // Escape double quotes and backslashes for Mermaid
-  const escaped = label.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  const escaped = label.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
   return `"${escaped}"`;
 }
 
