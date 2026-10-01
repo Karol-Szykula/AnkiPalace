@@ -372,9 +372,9 @@ function buildStatesSubgraph(lines: string[]): void {
 }
 
 function getCommandLabel(command: SyncCommand): string {
-  if (command === "import") return 'Import["Import (Anki wins)"]';
-  if (command === "export") return 'Export["Export (Obsidian wins)"]';
-  return 'Sync["Sync (no force)"]';
+  if (command === "import") return "Import['Import (Anki wins)']";
+  if (command === "export") return "Export['Export (Obsidian wins)']";
+  return "Sync['Sync (no force)']";
 }
 
 function buildCommandDiagram(command: SyncCommand): string {
