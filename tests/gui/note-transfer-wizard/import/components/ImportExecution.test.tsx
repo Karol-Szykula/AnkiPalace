@@ -16,7 +16,7 @@ import type {
   NoteLifecycleRecord,
   NoteLifecycleStatus,
 } from "src/services/notes/lifecycle";
-import { AnkiConnectMock } from "../../../mocks/anki-connect";
+import { AnkiConnectMock } from "../../../../mocks/anki-connect";
 
 AnkiConnectMock.install();
 

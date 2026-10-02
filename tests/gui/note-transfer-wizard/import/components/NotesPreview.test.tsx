@@ -16,7 +16,7 @@ import { App } from "obsidian-test-mocks/obsidian";
 import { computeContentHash } from "src/services/notes/content-hash";
 import { syncedCleanRecord } from "src/services/notes/lifecycle";
 import type { NoteLifecycleRecord } from "src/services/notes/lifecycle";
-import { AnkiConnectMock } from "../../../mocks/anki-connect";
+import { AnkiConnectMock } from "../../../../mocks/anki-connect";
 
 AnkiConnectMock.install();
 

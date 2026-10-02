@@ -1,13 +1,13 @@
 /**
  * @jest-environment jsdom
  *
- * Tests for sticky list headers and pinned pagination in NotesPreview.
+ * Tests for the shared List component: headers and sticky header behavior.
  */
 import "obsidian-test-mocks/jest-setup";
 import { render, screen } from "@testing-library/react";
 import { List, ListRow } from "@shared/components";
 
-describe("List sticky header", () => {
+describe("List", () => {
   test("given a list with header when rendered then header has sticky CSS class", () => {
     // given
     render(
