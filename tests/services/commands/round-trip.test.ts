@@ -68,7 +68,7 @@ async function exportOneNote(
     new Anki(),
     vault,
     settings,
-    "",
+    { ignoredDirectories: "" },
     jsonEngine,
   );
   if (report.created !== 1) {
@@ -188,7 +188,7 @@ describe("export then import round trip", () => {
       new Anki(),
       vault,
       settings,
-      "",
+      { ignoredDirectories: "" },
       jsonEngine,
     );
 

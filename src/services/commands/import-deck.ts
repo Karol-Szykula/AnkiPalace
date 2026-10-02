@@ -22,9 +22,8 @@ import {
 import type { MediaPathMap } from "src/services/vault/media";
 import { packForModel, type NotePack } from "src/services/notes/packs";
 import {
-  decisionActFor,
   isInScope,
-  syncDecisionFor,
+  resolveCommandDecision,
 } from "src/services/notes/decision-table";
 import {
   classifyNoteLifecycle,
@@ -246,7 +245,7 @@ async function importDecision(
   vault: Vault,
   yaml: YamlEngine,
 ): Promise<ImportDecision> {
-  const ankiWinsNoteIds = new Set(request.ankiWinsNoteIds ?? []);
+  const forcedNoteIds = request.ankiWinsNoteIds ?? [];
   const decision: ImportDecision = {
     changedSincePreview: 0,
     forced: 0,
@@ -260,14 +259,18 @@ async function importDecision(
     if (previewStatus !== undefined && previewStatus !== status) {
       decision.changedSincePreview += 1;
     }
-    const isForced = ankiWinsNoteIds.has(note.noteId);
-    const act = decisionActFor("import", status, isForced);
-    if (!isInScope(act)) {
+    const resolved = resolveCommandDecision(
+      "import",
+      status,
+      forcedNoteIds,
+      note.noteId,
+    );
+    if (!isInScope(resolved.act)) {
       countAsLeftToSync(status, decision);
       continue;
     }
-    transitionNoteLifecycle(status, act);
-    if (isForced && !isInScope(syncDecisionFor("import", status).act)) {
+    transitionNoteLifecycle(status, resolved.act);
+    if (resolved.forcedFromOutOfScope) {
       decision.forced += 1;
     }
     decision.importable.push(note);

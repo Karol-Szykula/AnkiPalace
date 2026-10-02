@@ -30,6 +30,17 @@ import type { NotePreviewStatus } from "src/services/notes/lifecycle";
 import { transferNotesPreviewClasses } from "../classes";
 import { commonWizardClasses } from "@shared/classes";
 import { NotesTable, type ColumnDef } from "@shared/components";
+import {
+  comparePreviewRank,
+  countNotes,
+  previewBadgeClass,
+  previewStatusOrder,
+  recreateWarning,
+  resolveBadgeText,
+  selectionNoticeText,
+  type PreviewBadgeClasses,
+} from "@shared/utils/preview";
+import { useApplyDefaultSelection } from "@shared/hooks/useApplyDefaultSelection";
 
 export interface NotesPreviewProps {
   readonly anki: Anki;
@@ -64,19 +75,6 @@ function noteSummary(note: AnkiNoteInfo): string {
   return normalizeNoteText(front ?? firstField).slice(0, 80);
 }
 
-const previewRowOrder: NotePreviewStatus[] = [
-  "new",
-  "newerInAnki",
-  "newerInVault",
-  "diverged",
-  "noFile",
-  "upToDate",
-];
-
-function previewRowRank(item: ClassifiedNote): number {
-  return previewRowOrder.indexOf(item.previewStatus);
-}
-
 function importRow(item: ClassifiedNote): SyncDecisionRow {
   return syncDecisionFor("import", item.status);
 }
@@ -95,22 +93,12 @@ function isImportSelectedByDefault(status: NoteLifecycleStatus): boolean {
   );
 }
 
-function previewBadgeClass(item: ClassifiedNote): string {
-  const { kind } = importRow(item);
-  if (kind === "create") {
-    return transferNotesPreviewClasses.previewBadgeNew;
-  }
-  if (kind === "quiet") {
-    return transferNotesPreviewClasses.previewBadgeImported;
-  }
-  if (kind === "skip" || kind === "conflict") {
-    return transferNotesPreviewClasses.previewBadgeSkipped;
-  }
-  if (kind === "overwrite") {
-    return transferNotesPreviewClasses.previewBadgeOverwrite;
-  }
-  return transferNotesPreviewClasses.previewBadgeImported;
-}
+const importBadgeClasses: PreviewBadgeClasses = {
+  badgeImported: transferNotesPreviewClasses.previewBadgeImported,
+  badgeNew: transferNotesPreviewClasses.previewBadgeNew,
+  badgeOverwrite: transferNotesPreviewClasses.previewBadgeOverwrite,
+  badgeSkipped: transferNotesPreviewClasses.previewBadgeSkipped,
+};
 
 function previewBadgeOutcome(item: ClassifiedNote): string {
   const row = importRow(item);
@@ -126,15 +114,15 @@ function previewBadgeOutcome(item: ClassifiedNote): string {
 }
 
 function previewBadgeText(item: ClassifiedNote, isForced: boolean): string {
-  const row = importRow(item);
-  if (isForced && row.forcedOutcome !== undefined) {
-    return row.forcedOutcome;
-  }
-  return previewBadgeOutcome(item);
+  return resolveBadgeText(importRow(item), isForced, previewBadgeOutcome(item));
 }
 
-function countNotes(count: number): string {
-  return count === 1 ? "1 note" : `${count} notes`;
+function classifiedNoteId(item: ClassifiedNote): number {
+  return item.note.noteId;
+}
+
+function classifiedDefaultSelected(item: ClassifiedNote): boolean {
+  return isImportSelectedByDefault(item.status);
 }
 
 const previewReasonText: Record<NotePreviewStatus, string> = {
@@ -148,17 +136,20 @@ const previewReasonText: Record<NotePreviewStatus, string> = {
 
 function selectionNotice(notes: ClassifiedNote[]): string {
   const reasons: string[] = [];
-  for (const status of previewRowOrder) {
+  for (const status of previewStatusOrder) {
     const count = notes.filter((item) => item.previewStatus === status).length;
     if (count > 0) {
       reasons.push(`${countNotes(count)} ${previewReasonText[status]}`);
     }
   }
-  return `Nothing is selected yet: ${reasons.join(", ")}. The button above takes Anki's version of every remaining note.`;
+  return selectionNoticeText(
+    reasons,
+    "The button above takes Anki's version of every remaining note.",
+  );
 }
 
 function resurrectionWarning(count: number): string {
-  return `This re-creates ${countNotes(count)} you deleted in Obsidian.`;
+  return recreateWarning(count, "Obsidian");
 }
 
 function buildCardColumns(
@@ -178,7 +169,7 @@ function buildCardColumns(
           <span
             className={mergeClasses(
               transferNotesPreviewClasses.previewBadge,
-              previewBadgeClass(item),
+              previewBadgeClass(importRow(item).kind, importBadgeClasses),
             )}
           >
             {previewBadgeText(item, forcedNoteIds[item.note.noteId] ?? false)}
@@ -275,9 +266,7 @@ export function NotesPreview({
         });
       }
       if (isLive()) {
-        const ordered = [...items].sort(
-          (first, second) => previewRowRank(first) - previewRowRank(second),
-        );
+        const ordered = [...items].sort(comparePreviewRank);
         setClassified(ordered);
         onNotesLoaded(
           items.map((item) => item.note),
@@ -296,28 +285,13 @@ export function NotesPreview({
     noteLifecycle,
   ]);
 
-  const applyDefaultNotesSelectedToImport = () => {
-    if (!classified) {
-      return;
-    }
-    if (
-      classified.some((item) => !(item.note.noteId in notesSelectedToImport))
-    ) {
-      const merged = { ...notesSelectedToImport };
-      for (const item of classified) {
-        if (!(item.note.noteId in merged)) {
-          merged[item.note.noteId] = isImportSelectedByDefault(item.status);
-        }
-      }
-      onNotesSelectedToImportChange(merged);
-    }
-  };
-
-  useEffect(applyDefaultNotesSelectedToImport, [
+  useApplyDefaultSelection(
     classified,
+    classifiedNoteId,
+    classifiedDefaultSelected,
     notesSelectedToImport,
     onNotesSelectedToImportChange,
-  ]);
+  );
 
   useEffect(() => {
     if (classified) {

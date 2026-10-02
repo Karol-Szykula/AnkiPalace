@@ -17,6 +17,7 @@ export interface NotesTableProps<T> {
   readonly bulkActionHandler: () => void;
   readonly bulkActionLabel: string;
   readonly columns: ColumnDef<T>[];
+  readonly countText?: (selectedCount: number, total: number) => string;
   readonly currentPage: number;
   readonly forcedNoteIds: Record<number, boolean>;
   readonly forceStrategy: ForceStrategy;
@@ -26,6 +27,7 @@ export interface NotesTableProps<T> {
   readonly getRowClassName?: (item: T) => string | undefined;
   readonly getStatus: (item: T) => NoteLifecycleStatus;
   readonly isResurrectable: (item: T) => boolean;
+  readonly isSelectionLocked?: (item: T) => boolean;
   readonly items: T[];
   readonly notesSelectedToImport: Record<number, boolean>;
   readonly onForcedChange: (noteId: number, isForced: boolean) => void;
@@ -53,6 +55,7 @@ function NoteRow<T>({
   getRow,
   getRowClassName,
   getStatus,
+  isSelectionLocked,
   forceStrategy,
 }: {
   readonly item: T;
@@ -71,10 +74,14 @@ function NoteRow<T>({
   readonly getRow: (item: T) => SyncDecisionRow;
   readonly getRowClassName?: (item: T) => string | undefined;
   readonly getStatus: (item: T) => NoteLifecycleStatus;
+  readonly isSelectionLocked?: (item: T) => boolean;
   readonly forceStrategy: ForceStrategy;
 }): JSX.Element {
   const noteId = getNoteId(item);
-  const isSelected = notesSelectedToImport[noteId] ?? getDefaultSelected(item);
+  const isLocked = isSelectionLocked?.(item) ?? false;
+  const isSelected = isLocked
+    ? true
+    : (notesSelectedToImport[noteId] ?? getDefaultSelected(item));
   const isForced = forcedNoteIds[noteId] ?? false;
   const row = getRow(item);
   const showForceToggle = forceStrategy.appliesToStatus(getStatus(item));
@@ -85,7 +92,7 @@ function NoteRow<T>({
         <span key="select">
           <input
             checked={isSelected}
-            disabled={!getDefaultSelected(item)}
+            disabled={isLocked || !getDefaultSelected(item)}
             key="select"
             onChange={(event) =>
               onSelectedChange(
@@ -129,12 +136,15 @@ export function NotesTable<T>({
   onPageChange,
   pageSize,
   columns,
+  countText = (selectedCount: number, total: number) =>
+    `Cards to import: ${selectedCount}/${total}.`,
   getDefaultSelected,
   getNoteId,
   getRow,
   getRowClassName,
   getStatus,
   isResurrectable,
+  isSelectionLocked,
   forceStrategy,
   bulkActionLabel,
   bulkActionHandler,
@@ -145,9 +155,13 @@ export function NotesTable<T>({
   onSelectedChange,
   notesSelectedToImport,
 }: NotesTableProps<T>): JSX.Element {
-  const notesSelectedToImportCount = Object.values(
-    notesSelectedToImport,
-  ).filter(Boolean).length;
+  const notesSelectedToImportCount =
+    Object.values(notesSelectedToImport).filter(Boolean).length +
+    items.filter(
+      (item) =>
+        (isSelectionLocked?.(item) ?? false) &&
+        !(getNoteId(item) in notesSelectedToImport),
+    ).length;
   const pageNotes = useMemo(
     () =>
       items.slice(currentPage * pageSize, currentPage * pageSize + pageSize),
@@ -173,9 +187,7 @@ export function NotesTable<T>({
 
   return (
     <div>
-      <p>
-        Cards to import: {notesSelectedToImportCount}/{items.length}.
-      </p>
+      <p>{countText(notesSelectedToImportCount, items.length)}</p>
       {notesSelectedToImportCount === 0 && selectionNotice && (
         <p className={mergeClasses(listClasses.listRow)}>{selectionNotice}</p>
       )}
@@ -205,6 +217,7 @@ export function NotesTable<T>({
             getRowClassName={getRowClassName}
             getStatus={getStatus}
             index={index}
+            isSelectionLocked={isSelectionLocked}
             item={item}
             key={getNoteId(item)}
             notesSelectedToImport={notesSelectedToImport}

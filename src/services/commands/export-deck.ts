@@ -28,7 +28,10 @@ import {
 } from "src/services/notes/lifecycle";
 import type { NotePack } from "src/services/notes/packs";
 import { packForModel } from "src/services/notes/packs";
-import { decisionActFor, isInScope } from "src/services/notes/decision-table";
+import {
+  isInScope,
+  resolveCommandDecision,
+} from "src/services/notes/decision-table";
 import { deckForPath, isIgnoredPath } from "src/services/vault/vault";
 import { parseNoteForm } from "src/services/notes/document";
 import { obsidianYamlEngine, type YamlEngine } from "src/services/yaml-engine";
@@ -39,9 +42,12 @@ import {
 } from "src/services/notes/document";
 
 export interface ExportReport {
+  changedSincePreview: number;
   created: number;
   enrolled: number;
+  forced: number;
   mediaFiles: number;
+  skipped: number;
   skippedConflicts: number;
   skippedDeleted: number;
   skippedForSync: number;
@@ -50,6 +56,14 @@ export interface ExportReport {
   skippedUnreadable: number;
   unchanged: number;
   updated: number;
+}
+
+export interface ExecuteExportRequest {
+  decisions?: Record<number, boolean>;
+  forcedNoteIds?: number[];
+  ignoredDirectories: string;
+  onProgress?: (processed: number, total: number) => void;
+  previewStatuses?: Record<number, NoteLifecycleStatus>;
 }
 
 interface BlockScan {
@@ -65,7 +79,7 @@ interface BlockLocation {
   start: number;
 }
 
-async function scanBlocks(
+export async function scanVaultBlocks(
   vault: Vault,
   ignoredDirectories: string,
   yaml: YamlEngine,
@@ -141,9 +155,12 @@ async function writeBackIds(
 
 function emptyExportReport(): ExportReport {
   return {
+    changedSincePreview: 0,
     created: 0,
     enrolled: 0,
+    forced: 0,
     mediaFiles: 0,
+    skipped: 0,
     skippedConflicts: 0,
     skippedDeleted: 0,
     skippedForSync: 0,
@@ -196,19 +213,27 @@ function packResolverFor(vault: Vault): PackResolver {
   };
 }
 
-async function lifecycleStatusForBlock(
-  location: BlockLocation,
+export async function classifyVaultBlock(
+  block: YamlNote,
   anki: AnkiNoteInfo | undefined,
   record: NoteLifecycleRecord | undefined,
 ): Promise<NoteLifecycleStatus> {
   return classifyNoteLifecycle({
     anki,
     block: {
-      id: location.block.id,
-      hash: await blockContentHash(location.block),
+      id: block.id,
+      hash: await blockContentHash(block),
     },
     record,
   });
+}
+
+async function lifecycleStatusForBlock(
+  location: BlockLocation,
+  anki: AnkiNoteInfo | undefined,
+  record: NoteLifecycleRecord | undefined,
+): Promise<NoteLifecycleStatus> {
+  return classifyVaultBlock(location.block, anki, record);
 }
 
 function countSkip(report: ExportReport, status: NoteLifecycleStatus): void {
@@ -245,29 +270,61 @@ interface BlockPlanContext {
   vault: Vault;
 }
 
+function isBlockDeselected(
+  location: BlockLocation,
+  request: ExecuteExportRequest,
+): boolean {
+  const id = location.block.id;
+  return id !== undefined && request.decisions?.[id] === false;
+}
+
+function previewStatusOf(
+  location: BlockLocation,
+  request: ExecuteExportRequest,
+): NoteLifecycleStatus | undefined {
+  const id = location.block.id;
+  return id === undefined ? undefined : request.previewStatuses?.[id];
+}
+
 async function planBlock(
   context: BlockPlanContext,
   location: BlockLocation,
   plan: ExportPlan,
+  request: ExecuteExportRequest,
 ): Promise<void> {
-  const anki = context.ankiNotes.get(location.block.id ?? -1);
+  if (isBlockDeselected(location, request)) {
+    plan.report.skipped += 1;
+    return;
+  }
+  const id = location.block.id;
+  const anki = context.ankiNotes.get(id ?? -1);
   const record =
-    location.block.id === undefined
-      ? undefined
-      : context.settings.noteLifecycle[location.block.id];
+    id === undefined ? undefined : context.settings.noteLifecycle[id];
   const status = await lifecycleStatusForBlock(location, anki, record);
-  const act = decisionActFor("export", status);
-  if (!isInScope(act)) {
+  const previewStatus = previewStatusOf(location, request);
+  if (previewStatus !== undefined && previewStatus !== status) {
+    plan.report.changedSincePreview += 1;
+  }
+  const decision = resolveCommandDecision(
+    "export",
+    status,
+    request.forcedNoteIds,
+    id,
+  );
+  if (!isInScope(decision.act)) {
     countSkip(plan.report, status);
     return;
   }
-  transitionNoteLifecycle(status, act);
+  transitionNoteLifecycle(status, decision.act);
+  if (decision.forcedFromOutOfScope) {
+    plan.report.forced += 1;
+  }
   const pack = await context.packFor(location.block.model);
   if (pack === undefined) {
     plan.report.skippedUnmapped += 1;
     return;
   }
-  if (act === "ENROLL" && anki !== undefined) {
+  if (decision.act === "ENROLL" && anki !== undefined) {
     await enrollLinkedBlock(
       context.settings,
       location,
@@ -276,17 +333,20 @@ async function planBlock(
       plan.report,
     );
   }
-  if (act === "CHECK") {
+  if (decision.act === "CHECK") {
     plan.report.unchanged += 1;
     return;
   }
-  if ((act === "PUSH" || act === "FORCE_PUSH") && anki !== undefined) {
+  if (
+    (decision.act === "PUSH" || decision.act === "FORCE_PUSH") &&
+    anki !== undefined
+  ) {
     plan.pushes.push(
       await buildPushedNote(context.vault, location, pack, anki),
     );
     return;
   }
-  if (act === "EXPORT") {
+  if (decision.act === "EXPORT") {
     const created = await buildCreatedNote(context.vault, location, pack);
     plan.creates.push({ location, ...created });
   }
@@ -297,6 +357,7 @@ async function planExport(
   vault: Vault,
   settings: ISettings,
   scan: BlockScan,
+  request: ExecuteExportRequest,
 ): Promise<ExportPlan> {
   const plan: ExportPlan = {
     creates: [],
@@ -311,8 +372,9 @@ async function planExport(
     settings,
     vault,
   };
-  for (const location of scan.locations) {
-    await planBlock(context, location, plan);
+  for (const [index, location] of scan.locations.entries()) {
+    await planBlock(context, location, plan, request);
+    request.onProgress?.(index + 1, scan.locations.length);
   }
   plan.report.mediaFiles = mediaFileCount(plannedNotes(plan));
   plan.report.skippedUnreadable = scan.unreadable;
@@ -390,11 +452,11 @@ export async function executeExport(
   anki: Anki,
   vault: Vault,
   settings: ISettings,
-  ignoredDirectories: string,
+  request: ExecuteExportRequest,
   yaml: YamlEngine = obsidianYamlEngine,
 ): Promise<ExportReport> {
-  const scan = await scanBlocks(vault, ignoredDirectories, yaml);
-  const plan = await planExport(anki, vault, settings, scan);
+  const scan = await scanVaultBlocks(vault, request.ignoredDirectories, yaml);
+  const plan = await planExport(anki, vault, settings, scan, request);
   await assurePlannedModels(anki, plan);
   await uploadPlannedMedia(anki, plan);
   await createPlannedNotes(anki, plan);
@@ -408,6 +470,7 @@ export function formatExportReport(report: ExportReport): string {
   return (
     `Export: ${report.created} created, ${report.updated} updated, ` +
     `${report.enrolled} enrolled, ${report.unchanged} unchanged, ` +
+    `${report.forced} forced, ${report.skipped} skipped, ` +
     `${report.mediaFiles} media files, ${report.skippedConflicts} skipped as conflicts, ` +
     `${report.skippedDeleted} skipped as deleted, ` +
     `${report.skippedForSync} left to Sync, ` +

@@ -246,6 +246,71 @@
   margin-top:  var(--ankipalace-note-import-wizard-modal__preview-pagination-margin-top);
 }
 
+.ankipalace-note-export-wizard-modal__scope-row {
+  padding: var(--ankipalace-note-transfer-wizard-modal__row-padding);
+}
+
+.ankipalace-note-export-wizard-modal__scope-row--disabled {
+  opacity: 0.5;
+}
+
+.modal-content .ankipalace-note-export-wizard-modal__scope-row > label {
+  display:     inline-flex;
+  align-items: center;
+  gap:         var(--ankipalace-note-transfer-wizard-modal__row-gap);
+  margin:      0;
+  line-height: 1.4;
+  cursor:      pointer;
+}
+
+.ankipalace-note-export-wizard-modal__scope-row input[type="radio"] {
+  margin:      0;
+  flex-shrink: 0;
+}
+
+.ankipalace-note-export-wizard-modal__scope-label-text {
+  transform: translateY(-0.0625rem);
+}
+
+.ankipalace-note-export-wizard-modal__scope-radio {
+  cursor: pointer;
+}
+
+.ankipalace-note-export-wizard-modal__scope-radio:disabled {
+  cursor:         default;
+  pointer-events: none;
+}
+
+.ankipalace-note-export-wizard-modal__preview-row {
+  padding: var(--ankipalace-note-transfer-wizard-modal__row-padding);
+}
+
+.ankipalace-note-export-wizard-modal__preview-row label {
+  display: flex;
+  gap:     var(--ankipalace-note-transfer-wizard-modal__row-gap);
+  cursor:  pointer;
+}
+
+.ankipalace-note-export-wizard-modal__preview-row--imported {
+  opacity: 0.5;
+}
+
+.ankipalace-note-export-wizard-modal__preview-badge--imported {
+  color: var(--text-faint);
+}
+
+.ankipalace-note-export-wizard-modal__preview-badge--new {
+  color: var(--text-success);
+}
+
+.ankipalace-note-export-wizard-modal__preview-badge--overwrite {
+  color: var(--text-error);
+}
+
+.ankipalace-note-export-wizard-modal__preview-badge--skipped {
+  color: var(--text-warning);
+}
+
 .ankipalace-note-transfer-wizard-modal__list {
   display: grid;
 }

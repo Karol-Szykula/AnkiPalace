@@ -7,6 +7,7 @@ import type { NoteSyncState } from "src/services/commands/import-deck";
 import { isNoteUpdatedSince } from "src/services/commands/import-deck";
 import { deckSearchQuery, fetchDeckNotes } from "src/services/anki/read";
 import { commonWizardClasses } from "@shared/classes";
+import { splitDeckHierarchy } from "@shared/utils/decks";
 import { scopeSelectionClasses } from "../classes";
 import { DeckList, type DeckItem } from "@shared/components";
 
@@ -34,17 +35,6 @@ function countImportedNotes(
 
 function isDeckEmpty(noteIds: number[]): boolean {
   return noteIds.length === 0;
-}
-
-function splitDeckHierarchy(deckName: string): {
-  depth: number;
-  shortName: string;
-} {
-  const hierarchy = deckName.split("::");
-  return {
-    depth: hierarchy.length - 1,
-    shortName: hierarchy[hierarchy.length - 1] ?? deckName,
-  };
 }
 
 async function fetchDecksWithNotes(

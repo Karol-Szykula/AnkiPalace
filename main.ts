@@ -3,6 +3,7 @@ import type { ISettings } from "src/conf/settings";
 import { normalizeSettings } from "src/conf/normalize-settings";
 import { SettingsTab } from "src/gui/settings-tab";
 import { NotesImportModal } from "src/gui/note-transfer-wizard/import/notes-import-modal";
+import { NotesExportModal } from "src/gui/note-transfer-wizard/export/notes-export-modal";
 import { Anki } from "src/services/anki/anki";
 import { logger } from "src/services/logger";
 import { describeUnknown } from "src/services/anki/anki";
@@ -17,17 +18,13 @@ import { registerNoteFormAutoPreview } from "src/gui/note-form/auto-preview";
 import { executeSync, formatSyncReport } from "src/services/commands/sync";
 import { createNoteFormFile, noteFormBlock } from "src/gui/note-form/commands";
 import {
-  executeExport,
-  formatExportReport,
-} from "src/services/commands/export-deck";
-import {
   forgetRecordsWithoutFiles,
   formatPurgeLedgerReport,
 } from "src/services/vault/records";
 
-const exportToAnkiCommandName = "Export to Anki";
 const syncCommandName = "Sync";
 const importDeckCommandName = "Import deck from Anki";
+const exportDeckCommandName = "Export deck to Anki";
 const purgeLedgerCommandName = "Purge ledger";
 const insertNoteFormCommandName = "Insert note form";
 const newNoteFileCommandName = "New note file";
@@ -82,39 +79,17 @@ export default class AnkiPalace extends Plugin {
   }
 
   private registerExportCommand(): void {
-    const exportToAnki = () => {
-      void this.runExport();
-    };
-    this.addRibbonIcon("ankipalace", exportToAnkiCommandName, exportToAnki);
     this.addCommand({
-      id: "export-to-anki",
-      name: exportToAnkiCommandName,
-      callback: exportToAnki,
+      id: "export-deck-to-anki",
+      name: exportDeckCommandName,
+      callback: () => {
+        new NotesExportModal(this.app, this.settings, () =>
+          this.saveData(this.settings),
+        )
+          .setTitle("Export deck to Anki")
+          .open();
+      },
     });
-  }
-
-  private async runExport(): Promise<void> {
-    try {
-      await new Anki().ping();
-    } catch {
-      new Notice(
-        "Error: Anki must be open with AnkiConnect installed.",
-        noticeTimeout,
-      );
-      return;
-    }
-    try {
-      const report = await executeExport(
-        new Anki(),
-        this.app.vault,
-        this.settings,
-        this.settings.ignoredDirectories,
-      );
-      await this.saveData(this.settings);
-      new Notice(formatExportReport(report), noticeTimeout);
-    } catch (error) {
-      new Notice(`Export failed: ${describeUnknown(error)}`, noticeTimeout);
-    }
   }
 
   private registerSyncCommand(): void {

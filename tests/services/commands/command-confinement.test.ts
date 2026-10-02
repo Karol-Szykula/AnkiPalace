@@ -121,7 +121,7 @@ describe("the export command stays inside its confinement", () => {
       new Anki(),
       vault,
       createSettings(),
-      "",
+      { ignoredDirectories: "" },
       jsonEngine,
     );
 
@@ -137,7 +137,13 @@ describe("the export command stays inside its confinement", () => {
     const vault = vaultWith({ "Languages/What-is-2-2.md": vaultOnlyBlock });
 
     // when
-    await executeExport(new Anki(), vault, createSettings(), "", jsonEngine);
+    await executeExport(
+      new Anki(),
+      vault,
+      createSettings(),
+      { ignoredDirectories: "" },
+      jsonEngine,
+    );
 
     // then
     const file = vault.getAbstractFileByPath("Languages/What-is-2-2.md");

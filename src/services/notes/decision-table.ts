@@ -279,6 +279,27 @@ export function decisionActFor(
   return row.act;
 }
 
+export interface ResolvedCommandDecision {
+  readonly act: SyncDecisionAct;
+  readonly forcedFromOutOfScope: boolean;
+  readonly isForced: boolean;
+}
+
+export function resolveCommandDecision(
+  command: SyncCommand,
+  status: NoteLifecycleStatus,
+  forcedNoteIds: readonly number[] | undefined,
+  id: number | undefined,
+): ResolvedCommandDecision {
+  const isForced = id !== undefined && (forcedNoteIds ?? []).includes(id);
+  return {
+    act: decisionActFor(command, status, isForced),
+    forcedFromOutOfScope:
+      isForced && !isInScope(syncDecisionFor(command, status).act),
+    isForced,
+  };
+}
+
 const forceLabels: Record<SyncCommand, string> = {
   export: "Obsidian wins",
   import: "Anki wins",

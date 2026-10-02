@@ -11,6 +11,7 @@ import { Anki } from "src/services/anki/anki";
 import {
   executeExport,
   formatExportReport,
+  type ExecuteExportRequest,
   type ExportReport,
 } from "src/services/commands/export-deck";
 import { computeContentHash } from "src/services/notes/content-hash";
@@ -118,7 +119,7 @@ describe("executeExport", () => {
       new Anki(),
       vault,
       settings,
-      "templates",
+      { ignoredDirectories: "templates" },
       jsonEngine,
     );
 
@@ -144,7 +145,7 @@ describe("executeExport", () => {
       new Anki(),
       vault,
       settings,
-      "",
+      { ignoredDirectories: "" },
       jsonEngine,
     );
 
@@ -173,7 +174,7 @@ describe("executeExport", () => {
       new Anki(),
       vault,
       settings,
-      "templates",
+      { ignoredDirectories: "templates" },
       jsonEngine,
     );
 
@@ -194,7 +195,7 @@ describe("executeExport", () => {
       new Anki(),
       vault,
       settings,
-      "",
+      { ignoredDirectories: "" },
       jsonEngine,
     );
 
@@ -215,13 +216,66 @@ describe("executeExport", () => {
       new Anki(),
       vault,
       settings,
-      "",
+      { ignoredDirectories: "" },
       jsonEngine,
     );
 
     // then
     expect(report.updated).toBe(0);
     expect(report.skippedForSync).toBe(1);
+    expect(await readPath(vault, "Languages/Q-101.md")).toBe(before);
+  });
+
+  test("given a diverged block when executed with force then pushes with Obsidian wins", async () => {
+    // given
+    const vault = vaultWith({
+      "Languages/Q-101.md": `${formBlock("Mine", "A", 101)}\n`,
+    });
+    const settings = await settingsWithRecord(101, 100, "Q", "A");
+    respondWithAnki([ankiNote(101, 200, "Q2")]);
+    const request: ExecuteExportRequest = {
+      forcedNoteIds: [101],
+      ignoredDirectories: "",
+    };
+
+    // when
+    const report: ExportReport = await executeExport(
+      new Anki(),
+      vault,
+      settings,
+      request,
+      jsonEngine,
+    );
+
+    // then
+    expect(report.updated).toBe(1);
+    expect(report.forced).toBe(1);
+    expect(report.skippedForSync).toBe(0);
+  });
+
+  test("given a deselected block when executed then skips it without touching Anki", async () => {
+    // given
+    const before = `${formBlock("Mine", "A", 101)}\n`;
+    const vault = vaultWith({ "Languages/Q-101.md": before });
+    const settings = await settingsWithRecord(101, 100, "Q", "A");
+    respondWithAnki([ankiNote(101, 100, "Q")]);
+    const request: ExecuteExportRequest = {
+      decisions: { 101: false },
+      ignoredDirectories: "",
+    };
+
+    // when
+    const report: ExportReport = await executeExport(
+      new Anki(),
+      vault,
+      settings,
+      request,
+      jsonEngine,
+    );
+
+    // then
+    expect(report.updated).toBe(0);
+    expect(report.skipped).toBe(1);
     expect(await readPath(vault, "Languages/Q-101.md")).toBe(before);
   });
 
@@ -239,7 +293,7 @@ describe("executeExport", () => {
       new Anki(),
       vault,
       settings,
-      "",
+      { ignoredDirectories: "" },
       jsonEngine,
     );
 
@@ -261,7 +315,7 @@ describe("executeExport", () => {
       new Anki(),
       vault,
       settings,
-      "",
+      { ignoredDirectories: "" },
       jsonEngine,
     );
 
@@ -282,7 +336,7 @@ describe("executeExport", () => {
       new Anki(),
       vault,
       settings,
-      "",
+      { ignoredDirectories: "" },
       jsonEngine,
     );
 
@@ -323,7 +377,7 @@ describe("executeExport", () => {
       new Anki(),
       vault,
       settings,
-      "",
+      { ignoredDirectories: "" },
       jsonEngine,
     );
 
@@ -356,7 +410,7 @@ describe("executeExport", () => {
       new Anki(),
       vault,
       settings,
-      "",
+      { ignoredDirectories: "" },
       jsonEngine,
     );
 
@@ -380,7 +434,7 @@ describe("executeExport", () => {
       new Anki(),
       vault,
       settings,
-      "",
+      { ignoredDirectories: "" },
       jsonEngine,
     );
 
@@ -418,7 +472,7 @@ describe("executeExport", () => {
       new Anki(),
       vault,
       settings,
-      "",
+      { ignoredDirectories: "" },
       jsonEngine,
     );
 
@@ -439,7 +493,7 @@ describe("executeExport", () => {
       new Anki(),
       vault,
       settings,
-      "",
+      { ignoredDirectories: "" },
       jsonEngine,
     );
 
@@ -458,14 +512,20 @@ describe("round trip without ping-pong", () => {
     const settings = createSettings();
     respondWithAnki();
     const anki = new Anki();
-    await executeExport(anki, vault, settings, "", jsonEngine);
+    await executeExport(
+      anki,
+      vault,
+      settings,
+      { ignoredDirectories: "" },
+      jsonEngine,
+    );
 
     // when
     const second: ExportReport = await executeExport(
       anki,
       vault,
       settings,
-      "",
+      { ignoredDirectories: "" },
       jsonEngine,
     );
 
@@ -489,14 +549,20 @@ describe("round trip without ping-pong", () => {
     const settings = await settingsWithRecord(101, 100, "Q", "A");
     respondWithAnki([ankiNote(101, 100)]);
     const anki = new Anki();
-    await executeExport(anki, vault, settings, "", jsonEngine);
+    await executeExport(
+      anki,
+      vault,
+      settings,
+      { ignoredDirectories: "" },
+      jsonEngine,
+    );
 
     // when
     const second: ExportReport = await executeExport(
       anki,
       vault,
       settings,
-      "",
+      { ignoredDirectories: "" },
       jsonEngine,
     );
 
@@ -521,7 +587,7 @@ describe("round trip without ping-pong", () => {
       new Anki(),
       vault,
       settings,
-      "",
+      { ignoredDirectories: "" },
       jsonEngine,
     );
 
@@ -543,7 +609,7 @@ describe("round trip without ping-pong", () => {
       new Anki(),
       vault,
       settings,
-      "",
+      { ignoredDirectories: "" },
       jsonEngine,
     );
 
@@ -566,7 +632,7 @@ describe("round trip without ping-pong", () => {
       new Anki(),
       vault,
       settings,
-      "",
+      { ignoredDirectories: "" },
       jsonEngine,
     );
 
@@ -602,7 +668,7 @@ describe("executeExport with an unreadable block", () => {
       new Anki(),
       vault,
       createSettings(),
-      "",
+      { ignoredDirectories: "" },
       jsonEngine,
     );
 
@@ -614,9 +680,12 @@ describe("executeExport with an unreadable block", () => {
   test("given a report with an unreadable block when formatted then it names the count", () => {
     // given
     const report: ExportReport = {
+      changedSincePreview: 0,
       created: 1,
       enrolled: 0,
+      forced: 0,
       mediaFiles: 0,
+      skipped: 0,
       skippedConflicts: 0,
       skippedDeleted: 0,
       skippedForSync: 0,
@@ -639,9 +708,12 @@ describe("formatExportReport", () => {
   test("given a report when formatted then summarizes the totals", () => {
     // given
     const report: ExportReport = {
+      changedSincePreview: 0,
       created: 3,
       enrolled: 1,
+      forced: 2,
       mediaFiles: 2,
+      skipped: 1,
       skippedConflicts: 3,
       skippedDeleted: 4,
       skippedForSync: 8,
@@ -658,6 +730,7 @@ describe("formatExportReport", () => {
     // then
     expect(text).toBe(
       "Export: 3 created, 7 updated, 1 enrolled, 6 unchanged, " +
+        "2 forced, 1 skipped, " +
         "2 media files, 3 skipped as conflicts, " +
         "4 skipped as deleted, 8 left to Sync, " +
         "9 skipped on model mismatch, 5 skipped without pack, " +
