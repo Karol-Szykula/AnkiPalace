@@ -27,7 +27,7 @@ import {
   noteTransferWizardClasses,
 } from "@shared/classes";
 
-export interface NotesTransferWizardProps {
+export interface NotesImportWizardProps {
   readonly onCancel: () => void;
   readonly saveSettings: () => Promise<void>;
   readonly settings: ISettings;
@@ -172,12 +172,12 @@ function buildImportWizardPages(
   ];
 }
 
-export function NotesTransferWizard({
+export function NotesImportWizard({
   onCancel,
   saveSettings,
   settings,
   vault,
-}: NotesTransferWizardProps): JSX.Element {
+}: NotesImportWizardProps): JSX.Element {
   const [anki] = useState(() => new Anki());
   const [selectedDeckName, setSelectedDeckName] = useState("");
   const { deckNotes, handleNotesLoaded, previewStatuses } = useDeckPreview();

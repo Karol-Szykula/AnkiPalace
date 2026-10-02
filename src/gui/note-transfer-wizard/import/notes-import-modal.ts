@@ -4,9 +4,9 @@ import { createElement } from "react";
 import type { Root } from "react-dom/client";
 import { createRoot } from "react-dom/client";
 import type { ISettings } from "src/conf/settings";
-import { NotesTransferWizard } from "src/gui/note-transfer-wizard/import/NotesTransferWizard";
+import { NotesImportWizard } from "src/gui/note-transfer-wizard/import/NotesImportWizard";
 
-export class NotesTransferModal extends Modal {
+export class NotesImportModal extends Modal {
   private settings: ISettings;
   private reactRoot: Root | null = null;
 
@@ -28,7 +28,7 @@ export class NotesTransferModal extends Modal {
   private mountReactRoot(contentEl: HTMLElement) {
     this.reactRoot = createRoot(contentEl);
     this.reactRoot.render(
-      createElement(NotesTransferWizard, {
+      createElement(NotesImportWizard, {
         settings: this.settings,
         vault: this.app.vault,
         saveSettings: () => this.saveSettings(),

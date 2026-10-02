@@ -182,7 +182,7 @@ export function DeckSelection({
           )
         }
         inputClassName={scopeSelectionClasses.scopeRadio}
-        inputName="ankipalace-note-transfer-wizard-modal-scope"
+        inputName="ankipalace-note-import-wizard-modal-scope"
         items={decks.map(({ deckName, noteIds, updatedCount }) =>
           toDeckItem(deckName, noteIds, updatedCount, vaultNoteIndex),
         )}
