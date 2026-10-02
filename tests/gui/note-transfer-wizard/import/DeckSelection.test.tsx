@@ -220,7 +220,7 @@ describe("DeckSelection", () => {
 
     // then
     expect(radio).toHaveClass(
-      "ankipalace-note-transfer-wizard-modal__scope-radio",
+      "ankipalace-note-import-wizard-modal__scope-radio",
     );
   });
 
@@ -236,7 +236,7 @@ describe("DeckSelection", () => {
     expect(radio).toBeDisabled();
     expect(
       radio.closest("div.ankipalace-note-transfer-wizard-modal__list-row"),
-    ).toHaveClass("ankipalace-note-transfer-wizard-modal__scope-row--disabled");
+    ).toHaveClass("ankipalace-note-import-wizard-modal__scope-row--disabled");
     expect(radio.closest("label")).toBeNull();
     expect(
       radio.closest(
