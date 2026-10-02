@@ -1,27 +1,3 @@
-export const commonWizardClasses = {
-  pageView: "ankipalace-note-transfer-wizard-modal__page-view",
-} as const;
-
-export const noteTransferWizardClasses = {
-  modal: "ankipalace-note-transfer-wizard-modal",
-} as const;
-
-export const pageIndicatorClasses = {
-  pageIndicator: "ankipalace-note-transfer-wizard-modal__page-indicator",
-  page: "ankipalace-note-transfer-wizard-modal__page",
-  pageNumber: "ankipalace-note-transfer-wizard-modal__page-number",
-  pageActive: "ankipalace-note-transfer-wizard-modal__page--active",
-  pageDone: "ankipalace-note-transfer-wizard-modal__page--done",
-  pageSeparator: "ankipalace-note-transfer-wizard-modal__page-separator",
-} as const;
-
-export const footerClasses = {
-  footer: "ankipalace-note-transfer-wizard-modal__footer",
-  footerRight: "ankipalace-note-transfer-wizard-modal__footer-right",
-  footerCenter: "ankipalace-note-transfer-wizard-modal__footer-center",
-  pageIndicator: "ankipalace-note-transfer-wizard-modal__footer-page-indicator",
-} as const;
-
 export const scopeSelectionClasses = {
   scopeLabelText: "ankipalace-note-transfer-wizard-modal__scope-label-text",
   scopeRadio: "ankipalace-note-transfer-wizard-modal__scope-radio",

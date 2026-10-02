@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type JSX } from "react";
-import { startAsyncLoad } from "src/gui/note-transfer-wizard/import/start-async-load";
+import { startAsyncLoad } from "@shared/hooks/useAsyncLoad";
 import type { Vault } from "obsidian";
 import { Anki } from "src/services/anki/anki";
 import { logger } from "src/services/logger";
@@ -17,16 +17,15 @@ import {
 import { noteShapeFor } from "src/entities/note-shapes";
 import { mergeFieldMappings } from "src/entities/field-mapping";
 import { useDeckPreview } from "src/gui/note-transfer-wizard/import/use-deck-preview";
-import { PageIndicator } from "src/gui/note-transfer-wizard/import/components/PageIndicator";
 import { DeckSelection } from "src/gui/note-transfer-wizard/import/components/DeckSelection";
 import { FieldMapping } from "src/gui/note-transfer-wizard/import/components/FieldMapping";
 import { NotesPreview } from "src/gui/note-transfer-wizard/import/components/NotesPreview";
 import { ImportExecution } from "src/gui/note-transfer-wizard/import/components/ImportExecution";
-import { Footer } from "src/gui/note-transfer-wizard/import/components/Footer";
+import { WizardShell, type WizardPage } from "@shared/components";
 import {
   commonWizardClasses,
   noteTransferWizardClasses,
-} from "src/gui/note-transfer-wizard/import/classes";
+} from "@shared/classes";
 
 export interface NotesTransferWizardProps {
   readonly onCancel: () => void;
@@ -35,20 +34,142 @@ export interface NotesTransferWizardProps {
   readonly vault: Vault;
 }
 
-const pageTitles = ["Deck", "Fields", "Cards", "Save"];
+interface ImportWizardContext {
+  readonly notesSelectedToImportCount: number;
+  readonly selectedDeckName: string;
+}
 
-function canAdvanceFromPage(
-  currentPage: number,
-  selectedDeckName: string,
-  notesSelectedToImportCount: number,
-): boolean {
-  if (currentPage === 1) {
-    return selectedDeckName !== "";
-  }
-  if (currentPage === 3) {
-    return notesSelectedToImportCount > 0;
-  }
-  return currentPage < 4;
+interface ImportWizardPageDeps {
+  readonly anki: Anki;
+  readonly deckNotes: ReturnType<typeof useDeckPreview>["deckNotes"];
+  readonly fieldMappings: Record<string, FieldMap>;
+  readonly finishImport: (report: ImportExecutionReport) => void;
+  readonly forcedNoteIds: Record<number, boolean>;
+  readonly handleNotesLoaded: ReturnType<
+    typeof useDeckPreview
+  >["handleNotesLoaded"];
+  readonly handleNotesPreviewPageChange: (page: number) => void;
+  readonly handleNotesPreviewTotalPagesChange: (totalPages: number) => void;
+  readonly notesPreviewPage: number;
+  readonly notesPreviewTotalPages: number;
+  readonly notesSelectedToImport: Record<number, boolean>;
+  readonly previewStatuses: ReturnType<
+    typeof useDeckPreview
+  >["previewStatuses"];
+  readonly selectDeckName: (deckName: string) => void;
+  readonly selectedDeckName: string;
+  readonly setFieldMappings: (mappings: Record<string, FieldMap>) => void;
+  readonly setForcedNoteIds: (ids: Record<number, boolean>) => void;
+  readonly setNotesSelectedToImport: (
+    selected: Record<number, boolean>,
+  ) => void;
+  readonly settings: ISettings;
+  readonly syncState: {
+    readonly fallbackRev: number;
+    readonly syncedMods: Record<number, number>;
+  };
+  readonly vault: Vault;
+  readonly vaultNoteIndex: VaultNoteIndex;
+}
+
+function saveModelPacksFor(
+  vault: Vault,
+  fieldMappings: Record<string, FieldMap>,
+): Promise<void> {
+  const saves = Object.entries(fieldMappings)
+    .filter(([modelName]) => builtInPackFor(modelName) === undefined)
+    .map(([modelName, mapping]) =>
+      savePack(vault, {
+        formTemplate: noteShapeFor(modelName),
+        mapping,
+        modelName,
+        packVersion: notePackVersion,
+      }),
+    );
+  return Promise.all(saves).then(
+    () => undefined,
+    (error: unknown) => {
+      logger.error("saving settings failed", error);
+    },
+  );
+}
+
+function buildImportWizardPages(
+  deps: ImportWizardPageDeps,
+): WizardPage<ImportWizardContext>[] {
+  return [
+    {
+      canAdvance: (context) => context.selectedDeckName !== "",
+      render: () => (
+        <DeckSelection
+          anki={deps.anki}
+          className={commonWizardClasses.pageView}
+          onSelectDeckName={deps.selectDeckName}
+          selectedDeckName={deps.selectedDeckName}
+          syncState={deps.syncState}
+          vaultNoteIndex={deps.vaultNoteIndex}
+        />
+      ),
+      title: "Deck",
+    },
+    {
+      render: () => (
+        <FieldMapping
+          anki={deps.anki}
+          className={commonWizardClasses.pageView}
+          deckName={deps.selectedDeckName}
+          key={deps.selectedDeckName}
+          onMappingsChange={deps.setFieldMappings}
+          savedMappings={deps.settings.fieldMappings}
+        />
+      ),
+      title: "Fields",
+    },
+    {
+      canAdvance: (context) => context.notesSelectedToImportCount > 0,
+      render: () => (
+        <NotesPreview
+          anki={deps.anki}
+          className={commonWizardClasses.pageView}
+          currentPage={deps.notesPreviewPage}
+          deckName={deps.selectedDeckName}
+          forcedNoteIds={deps.forcedNoteIds}
+          key={deps.selectedDeckName}
+          noteLifecycle={deps.settings.noteLifecycle}
+          notesSelectedToImport={deps.notesSelectedToImport}
+          onForcedNoteIdsChange={deps.setForcedNoteIds}
+          onNotesLoaded={deps.handleNotesLoaded}
+          onNotesSelectedToImportChange={deps.setNotesSelectedToImport}
+          onPageChange={deps.handleNotesPreviewPageChange}
+          onTotalPagesChange={deps.handleNotesPreviewTotalPagesChange}
+          totalPages={deps.notesPreviewTotalPages}
+          vault={deps.vault}
+          vaultNoteIndex={deps.vaultNoteIndex}
+        />
+      ),
+      title: "Cards",
+    },
+    {
+      render: () => (
+        <ImportExecution
+          anki={deps.anki}
+          className={commonWizardClasses.pageView}
+          deckName={deps.selectedDeckName}
+          fieldMappings={deps.fieldMappings}
+          forcedNoteIds={deps.forcedNoteIds}
+          key={deps.selectedDeckName}
+          noteLifecycle={deps.settings.noteLifecycle}
+          notes={deps.deckNotes}
+          notesSelectedToImport={deps.notesSelectedToImport}
+          onFinish={deps.finishImport}
+          previewStatuses={deps.previewStatuses}
+          vault={deps.vault}
+          vaultNoteIndex={deps.vaultNoteIndex}
+        />
+      ),
+      title: "Save",
+    },
+  ];
 }
 
 export function NotesTransferWizard({
@@ -58,7 +179,6 @@ export function NotesTransferWizard({
   vault,
 }: NotesTransferWizardProps): JSX.Element {
   const [anki] = useState(() => new Anki());
-  const [currentPage, setCurrentPage] = useState(1);
   const [selectedDeckName, setSelectedDeckName] = useState("");
   const { deckNotes, handleNotesLoaded, previewStatuses } = useDeckPreview();
   const [vaultNoteIndex, setVaultNoteIndex] = useState<VaultNoteIndex>(
@@ -98,27 +218,8 @@ export function NotesTransferWizard({
       fieldMappings,
     );
     void saveSettings();
-    void saveModelPacks();
+    void saveModelPacksFor(vault, fieldMappings);
   };
-
-  function saveModelPacks(): Promise<void> {
-    const saves = Object.entries(fieldMappings)
-      .filter(([modelName]) => builtInPackFor(modelName) === undefined)
-      .map(([modelName, mapping]) =>
-        savePack(vault, {
-          formTemplate: noteShapeFor(modelName),
-          mapping,
-          modelName,
-          packVersion: notePackVersion,
-        }),
-      );
-    return Promise.all(saves).then(
-      () => undefined,
-      (error: unknown) => {
-        logger.error("saving settings failed", error);
-      },
-    );
-  }
 
   const finishImport = (report: ImportExecutionReport) => {
     for (const [id, mod] of Object.entries(report.syncedNotes)) {
@@ -144,17 +245,6 @@ export function NotesTransferWizard({
     void saveSettings();
   };
 
-  const goToNextPage = () => {
-    if (currentPage === 2) {
-      persistFieldMappings();
-    }
-    if (currentPage === 3) {
-      setNotesPreviewPage(0);
-      setNotesPreviewTotalPages(1);
-    }
-    setCurrentPage(currentPage + 1);
-  };
-
   const handleNotesPreviewPageChange = (page: number) => {
     setNotesPreviewPage(page);
   };
@@ -176,115 +266,87 @@ export function NotesTransferWizard({
       syncedMods,
     };
   }, [settings.lastSyncRev, settings.noteLifecycle]);
-  const canAdvance = canAdvanceFromPage(
-    currentPage,
-    selectedDeckName,
-    notesSelectedToImportCount,
+
+  const pages = useMemo(
+    () =>
+      buildImportWizardPages({
+        anki,
+        deckNotes,
+        fieldMappings,
+        finishImport,
+        forcedNoteIds,
+        handleNotesLoaded,
+        handleNotesPreviewPageChange,
+        handleNotesPreviewTotalPagesChange,
+        notesPreviewPage,
+        notesPreviewTotalPages,
+        notesSelectedToImport,
+        previewStatuses,
+        selectDeckName,
+        selectedDeckName,
+        setFieldMappings,
+        setForcedNoteIds,
+        setNotesSelectedToImport,
+        settings,
+        syncState,
+        vault,
+        vaultNoteIndex,
+      }),
+    [
+      anki,
+      deckNotes,
+      fieldMappings,
+      finishImport,
+      forcedNoteIds,
+      handleNotesLoaded,
+      handleNotesPreviewPageChange,
+      handleNotesPreviewTotalPagesChange,
+      notesPreviewPage,
+      notesPreviewTotalPages,
+      notesSelectedToImport,
+      previewStatuses,
+      selectDeckName,
+      selectedDeckName,
+      setFieldMappings,
+      setForcedNoteIds,
+      setNotesSelectedToImport,
+      settings,
+      syncState,
+      vault,
+      vaultNoteIndex,
+    ],
   );
 
-  const rightButtons = [];
-  if (currentPage === 2 || currentPage === 3) {
-    rightButtons.push({
-      label: "← Back",
-      onClick: () => setCurrentPage(currentPage - 1),
-    });
-  }
-  if (currentPage < 3) {
-    rightButtons.push({
-      label: `Next: ${pageTitles[currentPage]} →`,
-      disabled: !canAdvance,
-      onClick: goToNextPage,
-    });
-  }
-  if (currentPage === 3) {
-    rightButtons.push({
-      label: "Import",
-      disabled: !canAdvance,
-      onClick: goToNextPage,
-    });
-  }
-  if (currentPage === 4) {
-    rightButtons.push({
-      label: "OK",
-      onClick: onCancel,
-    });
-  }
-
   return (
-    <div className={noteTransferWizardClasses.modal}>
-      <PageIndicator currentPage={currentPage} pages={pageTitles} />
-      {currentPage === 1 && (
-        <DeckSelection
-          anki={anki}
-          className={commonWizardClasses.pageView}
-          onSelectDeckName={selectDeckName}
-          selectedDeckName={selectedDeckName}
-          syncState={syncState}
-          vaultNoteIndex={vaultNoteIndex}
-        />
-      )}
-      {currentPage === 2 && (
-        <FieldMapping
-          anki={anki}
-          className={commonWizardClasses.pageView}
-          deckName={selectedDeckName}
-          key={selectedDeckName}
-          onMappingsChange={setFieldMappings}
-          savedMappings={settings.fieldMappings}
-        />
-      )}
-      {currentPage === 3 && (
-        <NotesPreview
-          anki={anki}
-          className={commonWizardClasses.pageView}
-          currentPage={notesPreviewPage}
-          deckName={selectedDeckName}
-          forcedNoteIds={forcedNoteIds}
-          key={selectedDeckName}
-          noteLifecycle={settings.noteLifecycle}
-          notesSelectedToImport={notesSelectedToImport}
-          onForcedNoteIdsChange={setForcedNoteIds}
-          onNotesLoaded={handleNotesLoaded}
-          onNotesSelectedToImportChange={setNotesSelectedToImport}
-          onPageChange={handleNotesPreviewPageChange}
-          onTotalPagesChange={handleNotesPreviewTotalPagesChange}
-          totalPages={notesPreviewTotalPages}
-          vault={vault}
-          vaultNoteIndex={vaultNoteIndex}
-        />
-      )}
-      {currentPage === 4 && (
-        <ImportExecution
-          anki={anki}
-          className={commonWizardClasses.pageView}
-          deckName={selectedDeckName}
-          fieldMappings={fieldMappings}
-          forcedNoteIds={forcedNoteIds}
-          key={selectedDeckName}
-          noteLifecycle={settings.noteLifecycle}
-          notes={deckNotes}
-          notesSelectedToImport={notesSelectedToImport}
-          onFinish={finishImport}
-          previewStatuses={previewStatuses}
-          vault={vault}
-          vaultNoteIndex={vaultNoteIndex}
-        />
-      )}
-      <Footer
-        leftButtons={
-          currentPage === 4 ? [] : [{ label: "Cancel", onClick: onCancel }]
+    <WizardShell
+      className={noteTransferWizardClasses.modal}
+      getContext={() => ({
+        notesSelectedToImportCount,
+        selectedDeckName,
+      })}
+      getNextLabel={(page) => (page === 3 ? "Import" : undefined)}
+      getPagination={(page) =>
+        page === 3
+          ? {
+              currentPage: notesPreviewPage,
+              onPageChange: handleNotesPreviewPageChange,
+              totalPages: notesPreviewTotalPages,
+            }
+          : undefined
+      }
+      initialPage={1}
+      onBeforeAdvance={(fromPage) => {
+        if (fromPage === 2) {
+          persistFieldMappings();
         }
-        pagination={
-          currentPage === 3
-            ? {
-                currentPage: notesPreviewPage,
-                totalPages: notesPreviewTotalPages,
-                onPageChange: handleNotesPreviewPageChange,
-              }
-            : undefined
+        if (fromPage === 3) {
+          setNotesPreviewPage(0);
+          setNotesPreviewTotalPages(1);
         }
-        rightButtons={rightButtons}
-      />
-    </div>
+      }}
+      onCancel={onCancel}
+      onFinish={() => undefined}
+      pages={pages}
+    />
   );
 }

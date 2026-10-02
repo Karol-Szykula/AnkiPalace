@@ -1,6 +1,6 @@
 import type { JSX, ReactNode } from "react";
 import { mergeClasses } from "src/gui/classes";
-import { listClasses } from "src/gui/note-transfer-wizard/import/listClasses";
+import { listClasses } from "../classes/common";
 
 type ListDividers = "top" | "bottom" | "none";
 

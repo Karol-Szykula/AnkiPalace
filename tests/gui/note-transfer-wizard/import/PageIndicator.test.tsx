@@ -5,7 +5,7 @@
  * active/done states and optional connectors.
  */
 import { render, screen } from "@testing-library/react";
-import { PageIndicator } from "src/gui/note-transfer-wizard/import/components/PageIndicator";
+import { PageIndicator } from "@shared/components/PageIndicator";
 
 const pageTitles = ["Deck", "Fields", "Cards", "Save"];
 

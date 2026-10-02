@@ -5,8 +5,7 @@
  */
 import "obsidian-test-mocks/jest-setup";
 import { render, screen } from "@testing-library/react";
-import { List } from "src/gui/note-transfer-wizard/import/list/List";
-import { ListRow } from "src/gui/note-transfer-wizard/import/list/ListRow";
+import { List, ListRow } from "@shared/components";
 
 describe("List sticky header", () => {
   test("given a list with header when rendered then header has sticky CSS class", () => {

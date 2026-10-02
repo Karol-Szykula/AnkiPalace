@@ -6,10 +6,7 @@
  */
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import {
-  Footer,
-  type FooterButton,
-} from "src/gui/note-transfer-wizard/import/components/Footer";
+import { Footer, type FooterButton } from "@shared/components/Footer";
 
 function renderFooter(
   leftButtons: FooterButton[] = [{ label: "Cancel", onClick: jest.fn() }],

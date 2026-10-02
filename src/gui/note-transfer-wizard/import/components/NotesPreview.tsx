@@ -1,6 +1,8 @@
-import { useEffect, useState, type JSX } from "react";
+import { useEffect, useMemo, useState, type JSX } from "react";
 import { mergeClasses } from "src/gui/classes";
-import { startAsyncLoad } from "src/gui/note-transfer-wizard/import/start-async-load";
+import { startAsyncLoad } from "@shared/hooks/useAsyncLoad";
+import { useForceToggle } from "@shared/hooks/useForceToggle";
+import { ankiWinsStrategy } from "@shared/types/AnkiWinsStrategy";
 import type { Anki } from "src/services/anki/anki";
 import type { AnkiNoteInfo } from "src/entities/anki-note";
 import type { Vault } from "obsidian";
@@ -25,12 +27,9 @@ import { fetchDeckNotes } from "src/services/anki/read";
 import { normalizeNoteText } from "src/services/notes/text";
 import type { ClassifiedNote } from "src/services/commands/import-deck";
 import type { NotePreviewStatus } from "src/services/notes/lifecycle";
-import {
-  transferNotesPreviewClasses,
-  commonWizardClasses,
-} from "src/gui/note-transfer-wizard/import/classes";
-import { List } from "src/gui/note-transfer-wizard/import/list/List";
-import { ListRow } from "src/gui/note-transfer-wizard/import/list/ListRow";
+import { transferNotesPreviewClasses } from "../classes";
+import { commonWizardClasses } from "@shared/classes";
+import { NotesTable, type ColumnDef } from "@shared/components";
 
 export interface NotesPreviewProps {
   readonly anki: Anki;
@@ -134,14 +133,6 @@ function previewBadgeText(item: ClassifiedNote, isForced: boolean): string {
   return previewBadgeOutcome(item);
 }
 
-function forceAriaLabel(item: ClassifiedNote): string {
-  const { forcedOutcome } = importRow(item);
-  return (
-    forcedOutcome ??
-    "Anki wins: overwrite what is in Obsidian with Anki's version"
-  );
-}
-
 function countNotes(count: number): string {
   return count === 1 ? "1 note" : `${count} notes`;
 }
@@ -170,57 +161,19 @@ function resurrectionWarning(count: number): string {
   return `This re-creates ${countNotes(count)} you deleted in Obsidian.`;
 }
 
-interface NoteRowProps {
-  readonly className?: string;
-  readonly forcedNoteIds: Record<number, boolean>;
-  readonly item: ClassifiedNote;
-  readonly notesSelectedToImport: Record<number, boolean>;
-  readonly onForcedChange: (noteId: number, isForced: boolean) => void;
-  readonly onSelectedChange: (
-    selected: Record<number, boolean>,
-    noteId: number,
-    isSelected: boolean,
-  ) => void;
-}
-
-function NoteRow({
-  className,
-  forcedNoteIds,
-  item,
-  notesSelectedToImport,
-  onForcedChange,
-  onSelectedChange,
-}: NoteRowProps): JSX.Element {
-  const noteId = item.note.noteId;
-  return (
-    <ListRow
-      cells={[
-        <span key="select">
-          <input
-            checked={notesSelectedToImport[noteId] ?? false}
-            disabled={!isImportSelectedByDefault(item.status)}
-            key="select"
-            onChange={(event) =>
-              onSelectedChange(
-                notesSelectedToImport,
-                noteId,
-                event.target.checked,
-              )
-            }
-            type="checkbox"
-          />
-          <label>
-            <input
-              aria-label={forceAriaLabel(item)}
-              checked={forcedNoteIds[noteId] ?? false}
-              key="force"
-              onChange={(event) => onForcedChange(noteId, event.target.checked)}
-              type="checkbox"
-            />
-            Anki wins
-          </label>
-        </span>,
-        <label key="card">
+function buildCardColumns(
+  forcedNoteIds: Record<number, boolean>,
+): ColumnDef<ClassifiedNote>[] {
+  return [
+    {
+      header: "Select",
+      render: () => <></>,
+      width: "auto",
+    },
+    {
+      header: "Card",
+      render: (item: ClassifiedNote) => (
+        <label>
           <span>{noteSummary(item.note)}</span>
           <span
             className={mergeClasses(
@@ -228,27 +181,20 @@ function NoteRow({
               previewBadgeClass(item),
             )}
           >
-            {previewBadgeText(item, forcedNoteIds[noteId] ?? false)}
+            {previewBadgeText(item, forcedNoteIds[item.note.noteId] ?? false)}
           </span>
-        </label>,
-      ]}
-      className={mergeClasses(
-        className,
-        transferNotesPreviewClasses.previewRow,
-        item.previewStatus === "upToDate"
-          ? transferNotesPreviewClasses.previewRowImported
-          : undefined,
-      )}
-      key={noteId}
-    />
-  );
+        </label>
+      ),
+      width: "1fr",
+    },
+  ];
 }
 
 export function NotesPreview({
   anki,
   currentPage,
   deckName,
-  forcedNoteIds,
+  forcedNoteIds: initialForcedNoteIds,
   noteLifecycle,
   onPageChange,
   onTotalPagesChange,
@@ -265,12 +211,14 @@ export function NotesPreview({
   const [classified, setClassified] = useState<ClassifiedNote[] | null>(null);
   const [progress, setProgress] = useState("");
   const [loadError, setLoadError] = useState("");
-  const page = currentPage;
-  const setPage = onPageChange;
+  const [forceState, forceActions] = useForceToggle(
+    initialForcedNoteIds,
+    ankiWinsStrategy,
+  );
 
   const loadPreviewNotes = (): (() => void) => {
     setRawNotes(null);
-    setPage(0);
+    onPageChange(0);
     return startAsyncLoad(async (isLive) => {
       try {
         const notes = await fetchDeckNotes(anki, deckName, (fetched, total) => {
@@ -307,13 +255,13 @@ export function NotesPreview({
           anki: note,
           block: block
             ? {
-                id: block.id,
                 hash: await computeContentHash(
                   block.front,
                   block.back,
                   block.tags,
                   block.model,
                 ),
+                id: block.id,
               }
             : undefined,
           record: noteLifecycle[note.noteId],
@@ -381,6 +329,55 @@ export function NotesPreview({
     }
   }, [classified, onTotalPagesChange]);
 
+  const notesLeftToDecide = useMemo(
+    () =>
+      classified?.filter(
+        (item) =>
+          !isImportSelectedByDefault(item.status) &&
+          !forceState.forcedNoteIds[item.note.noteId],
+      ) ?? [],
+    [classified, forceState.forcedNoteIds],
+  );
+  const notesToResurrect = notesLeftToDecide.filter(
+    (item) => item.previewStatus === "noFile",
+  ).length;
+
+  const selectNote = (
+    selected: Record<number, boolean>,
+    noteId: number,
+    isSelected: boolean,
+  ): void => {
+    onNotesSelectedToImportChange({ ...selected, [noteId]: isSelected });
+  };
+
+  const toggleForced = (noteId: number, isForced: boolean): void => {
+    forceActions.toggleForced(noteId, isForced);
+    onForcedNoteIdsChange({ ...forceState.forcedNoteIds, [noteId]: isForced });
+    onNotesSelectedToImportChange({
+      ...notesSelectedToImport,
+      [noteId]: isForced,
+    });
+  };
+
+  const useAnkiForEveryNote = (): void => {
+    const forced = { ...forceState.forcedNoteIds };
+    const selected = { ...notesSelectedToImport };
+    for (const item of notesLeftToDecide) {
+      forced[item.note.noteId] = true;
+      selected[item.note.noteId] = true;
+    }
+    onForcedNoteIdsChange(forced);
+    onNotesSelectedToImportChange(selected);
+    for (const item of notesLeftToDecide) {
+      forceActions.setForced(item.note.noteId, true);
+    }
+  };
+
+  const columns = useMemo(
+    () => buildCardColumns(forceState.forcedNoteIds),
+    [forceState.forcedNoteIds],
+  );
+
   if (loadError) {
     return (
       <div className={rootClassName}>
@@ -395,82 +392,38 @@ export function NotesPreview({
       </div>
     );
   }
-  const notesSelectedToImportCount = Object.values(
-    notesSelectedToImport,
-  ).filter(Boolean).length;
-  const pageNotes = classified.slice(
-    page * previewPageSize,
-    page * previewPageSize + previewPageSize,
-  );
-  const notesLeftToDecide = classified.filter(
-    (item) =>
-      !isImportSelectedByDefault(item.status) &&
-      !forcedNoteIds[item.note.noteId],
-  );
-  const notesToResurrect = notesLeftToDecide.filter(
-    (item) => item.previewStatus === "noFile",
-  ).length;
-  const isNothingSelected = notesSelectedToImportCount === 0;
-
-  const selectNote = (
-    selected: Record<number, boolean>,
-    noteId: number,
-    isSelected: boolean,
-  ): void => {
-    onNotesSelectedToImportChange({ ...selected, [noteId]: isSelected });
-  };
-
-  const toggleForced = (noteId: number, isForced: boolean): void => {
-    onForcedNoteIdsChange({ ...forcedNoteIds, [noteId]: isForced });
-    onNotesSelectedToImportChange({
-      ...notesSelectedToImport,
-      [noteId]: isForced,
-    });
-  };
-
-  const useAnkiForEveryNote = (): void => {
-    const forced = { ...forcedNoteIds };
-    const selected = { ...notesSelectedToImport };
-    for (const item of notesLeftToDecide) {
-      forced[item.note.noteId] = true;
-      selected[item.note.noteId] = true;
-    }
-    onForcedNoteIdsChange(forced);
-    onNotesSelectedToImportChange(selected);
-  };
 
   return (
     <div className={rootClassName}>
-      <p>
-        Cards to import: {notesSelectedToImportCount}/{classified.length}.
-      </p>
-      {isNothingSelected && (
-        <p className={transferNotesPreviewClasses.noticeText}>
-          {selectionNotice(classified)}
-        </p>
-      )}
-      {notesLeftToDecide.length > 0 && (
-        <button onClick={useAnkiForEveryNote} type="button">
-          {`Use Anki's version for all (${notesLeftToDecide.length})`}
-        </button>
-      )}
-      {notesToResurrect > 0 && (
-        <p className={transferNotesPreviewClasses.noticeText}>
-          {resurrectionWarning(notesToResurrect)}
-        </p>
-      )}
-      <List columns={["Select", "Card"]} columnWidths="auto 1fr">
-        {pageNotes.map((item) => (
-          <NoteRow
-            forcedNoteIds={forcedNoteIds}
-            item={item}
-            key={item.note.noteId}
-            notesSelectedToImport={notesSelectedToImport}
-            onForcedChange={toggleForced}
-            onSelectedChange={selectNote}
-          />
-        ))}
-      </List>
+      <NotesTable
+        bulkActionHandler={useAnkiForEveryNote}
+        bulkActionLabel="Use Anki's version for all (X)"
+        columns={columns}
+        currentPage={currentPage}
+        forcedNoteIds={forceState.forcedNoteIds}
+        forceStrategy={ankiWinsStrategy}
+        getDefaultSelected={(item) => isImportSelectedByDefault(item.status)}
+        getNoteId={(item) => item.note.noteId}
+        getRow={(item) => syncDecisionFor("import", item.status)}
+        getRowClassName={(item) =>
+          mergeClasses(
+            transferNotesPreviewClasses.previewRow,
+            item.previewStatus === "upToDate"
+              ? transferNotesPreviewClasses.previewRowImported
+              : undefined,
+          )
+        }
+        getStatus={(item) => item.status}
+        isResurrectable={(item) => item.previewStatus === "noFile"}
+        items={classified}
+        notesSelectedToImport={notesSelectedToImport}
+        onForcedChange={toggleForced}
+        onPageChange={onPageChange}
+        onSelectedChange={selectNote}
+        pageSize={previewPageSize}
+        resurrectionWarning={resurrectionWarning(notesToResurrect)}
+        selectionNotice={selectionNotice(classified)}
+      />
     </div>
   );
 }

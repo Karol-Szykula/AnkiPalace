@@ -90,6 +90,7 @@ export default {
   // A map from regular expressions to module names or to arrays of module names that allow to stub out resources with a single module
   moduleNameMapper: {
     "^src/(.*)$": "<rootDir>/src/$1",
+    "^@shared/(.*)$": "<rootDir>/src/gui/note-transfer-wizard/shared/$1",
     "^obsidian$": "obsidian-test-mocks/obsidian",
   },
 

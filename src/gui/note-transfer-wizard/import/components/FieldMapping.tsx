@@ -1,7 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type JSX } from "react";
 import { mergeClasses } from "src/gui/classes";
 import type { Anki } from "src/services/anki/anki";
-import { startAsyncLoad } from "src/gui/note-transfer-wizard/import/start-async-load";
+import { startAsyncLoad } from "../../shared/hooks/useAsyncLoad";
 import type { DeckModel } from "src/services/notes/fields";
 import type {
   FieldMapping as FieldMap,
@@ -11,12 +11,9 @@ import { fieldTargets, resolveFieldMapping } from "src/entities/field-mapping";
 import { isKnownModel } from "src/services/anki/anki-models";
 import { discoverDeckModels } from "src/services/notes/fields";
 import { builtInPackFor } from "src/services/notes/packs";
-import {
-  commonWizardClasses,
-  transferFieldMappingClasses,
-} from "src/gui/note-transfer-wizard/import/classes";
-import { List } from "src/gui/note-transfer-wizard/import/list/List";
-import { ListRow } from "src/gui/note-transfer-wizard/import/list/ListRow";
+import { commonWizardClasses } from "@shared/classes";
+import { transferFieldMappingClasses } from "../classes";
+import { List, ListRow } from "@shared/components";
 
 export interface FieldMappingProps {
   readonly anki: Anki;

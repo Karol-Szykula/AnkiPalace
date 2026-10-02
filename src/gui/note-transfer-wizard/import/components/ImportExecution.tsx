@@ -14,7 +14,7 @@ import {
   type ImportExecutionReport,
 } from "src/services/commands/import-deck";
 import { fetchNotesByIds } from "src/services/anki/read";
-import { commonWizardClasses } from "src/gui/note-transfer-wizard/import/classes";
+import { commonWizardClasses } from "../../shared/classes";
 
 export interface ImportExecutionProps {
   readonly anki: Anki;

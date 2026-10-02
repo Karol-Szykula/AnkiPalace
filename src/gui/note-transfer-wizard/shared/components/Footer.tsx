@@ -1,6 +1,6 @@
 import type { JSX } from "react";
 import { mergeClasses } from "src/gui/classes";
-import { footerClasses } from "src/gui/note-transfer-wizard/import/classes";
+import { footerClasses } from "../classes/common";
 
 export interface FooterButton {
   disabled?: boolean;

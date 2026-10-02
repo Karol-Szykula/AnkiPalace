@@ -1,20 +1,14 @@
 import { useEffect, useState, type JSX } from "react";
 import { mergeClasses } from "src/gui/classes";
-import { startAsyncLoad } from "src/gui/note-transfer-wizard/import/start-async-load";
+import { startAsyncLoad } from "@shared/hooks/useAsyncLoad";
 import type { Anki } from "src/services/anki/anki";
 import type { VaultNoteIndex } from "src/services/vault/vault";
 import type { NoteSyncState } from "src/services/commands/import-deck";
 import { isNoteUpdatedSince } from "src/services/commands/import-deck";
 import { deckSearchQuery, fetchDeckNotes } from "src/services/anki/read";
-import {
-  commonWizardClasses,
-  scopeSelectionClasses,
-} from "src/gui/note-transfer-wizard/import/classes";
-import { List } from "src/gui/note-transfer-wizard/import/list/List";
-import {
-  LabeledControl,
-  ListRow,
-} from "src/gui/note-transfer-wizard/import/list/ListRow";
+import { commonWizardClasses } from "@shared/classes";
+import { scopeSelectionClasses } from "../classes";
+import { DeckList, type DeckItem } from "@shared/components";
 
 export interface DeckSelectionProps {
   readonly anki: Anki;
@@ -38,28 +32,8 @@ function countImportedNotes(
   return noteIds.filter((id) => vaultNoteIndex.has(id)).length;
 }
 
-function isDeckFullyImported(
-  noteIds: number[],
-  importedCount: number,
-): boolean {
-  return noteIds.length > 0 && importedCount === noteIds.length;
-}
-
 function isDeckEmpty(noteIds: number[]): boolean {
   return noteIds.length === 0;
-}
-
-function deckRowTooltip(
-  isFullyImported: boolean,
-  isEmptyDeck: boolean,
-): string | undefined {
-  if (isFullyImported) {
-    return "Already in Obsidian";
-  }
-  if (isEmptyDeck) {
-    return "Empty deck";
-  }
-  return undefined;
 }
 
 function splitDeckHierarchy(deckName: string): {
@@ -125,6 +99,24 @@ function isEmptyDefaultDeck(deckName: string, noteIds: number[]): boolean {
   return deckName === "Default" && noteIds.length === 0;
 }
 
+function toDeckItem(
+  deckName: string,
+  noteIds: number[],
+  updatedCount: number | null,
+  vaultNoteIndex: VaultNoteIndex,
+): DeckItem {
+  const { depth, shortName } = splitDeckHierarchy(deckName);
+  return {
+    depth,
+    isDisabled: isDeckEmpty(noteIds),
+    name: deckName,
+    shortName,
+    syncedCount: countImportedNotes(noteIds, vaultNoteIndex),
+    totalCount: noteIds.length,
+    updatedCount,
+  };
+}
+
 export function DeckSelection({
   anki,
   syncState,
@@ -157,7 +149,6 @@ export function DeckSelection({
   useEffect(loadDeckList, [anki, vaultNoteIndex, syncState]);
 
   const rootClassName = mergeClasses(commonWizardClasses.pageView, className);
-  const listColumns = ["Deck", "Imported"];
 
   if (loadError) {
     return (
@@ -182,64 +173,24 @@ export function DeckSelection({
   }
   return (
     <div className={rootClassName}>
-      <p>Select a deck to import:</p>
-      <List columns={listColumns} columnWidths="1fr auto" dividers="bottom">
-        {decks.map(({ deckName, noteIds, updatedCount }) => {
-          const importedCount = countImportedNotes(noteIds, vaultNoteIndex);
-          const upToDateCount =
-            updatedCount === null
-              ? importedCount
-              : noteIds.length - updatedCount;
-          const isFullyImported = isDeckFullyImported(noteIds, upToDateCount);
-          const isEmptyDeck = isDeckEmpty(noteIds);
-          const isDisabled = isEmptyDeck;
-          const { depth, shortName } = splitDeckHierarchy(deckName);
-          const tooltip = deckRowTooltip(isFullyImported, isEmptyDeck);
-          const deckRowCells = [
-            <LabeledControl
-              control={
-                <input
-                  checked={deckName === selectedDeckName}
-                  className={scopeSelectionClasses.scopeRadio}
-                  disabled={isDisabled}
-                  name="ankipalace-note-transfer-wizard-modal-scope"
-                  onChange={() => onSelectDeckName(deckName)}
-                  title={tooltip}
-                  type="radio"
-                  value={deckName}
-                />
-              }
-              controlLabel={shortName}
-              disabled={isDisabled}
-              key="select"
-              label={
-                <span className={scopeSelectionClasses.scopeLabelText}>
-                  {shortName}
-                </span>
-              }
-              tooltip={tooltip}
-            />,
-            <span key="count">
-              {upToDateCount}/{noteIds.length}
-            </span>,
-          ];
-          return (
-            <ListRow
-              cells={deckRowCells}
-              className={mergeClasses(
-                scopeSelectionClasses.scopeRow,
-                isDisabled ? scopeSelectionClasses.scopeRowDisabled : undefined,
-              )}
-              disabled={isDisabled}
-              key={deckName}
-              onSelect={() => onSelectDeckName(deckName)}
-              style={{
-                paddingLeft: `calc(${depth} * var(--ankipalace-note-transfer-wizard-modal__row-indent) + 0.25rem)`,
-              }}
-            />
-          );
-        })}
-      </List>
+      <DeckList
+        alreadySyncedTooltip="Already in Obsidian"
+        getRowClassName={(_item, isDisabled) =>
+          mergeClasses(
+            scopeSelectionClasses.scopeRow,
+            isDisabled ? scopeSelectionClasses.scopeRowDisabled : undefined,
+          )
+        }
+        inputClassName={scopeSelectionClasses.scopeRadio}
+        inputName="ankipalace-note-transfer-wizard-modal-scope"
+        items={decks.map(({ deckName, noteIds, updatedCount }) =>
+          toDeckItem(deckName, noteIds, updatedCount, vaultNoteIndex),
+        )}
+        labelClassName={scopeSelectionClasses.scopeLabelText}
+        onSelect={onSelectDeckName}
+        prompt="Select a deck to import:"
+        selectedName={selectedDeckName}
+      />
     </div>
   );
 }
